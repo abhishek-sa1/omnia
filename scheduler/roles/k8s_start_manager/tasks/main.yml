@@ -68,6 +68,11 @@
       ansible.builtin.fail:
         msg: "{{ docker_login_fail_msg }}"
       when: docker_login_output is failed
+    
+    - name: Generate default containerd configuration
+      ansible.builtin.shell:
+        cmd: containerd config default > /etc/containerd/config.toml && systemctl restart containerd
+      become: yes    
 
     - name: Initialize kubeadm (This process may take 5-10min)
       block:
@@ -88,7 +93,7 @@
           changed_when: true
           register: init_output
           tags: init
-      when: "'master' not in k8s_nodes.stdout"
+      when: "'control-plane' not in k8s_nodes.stdout"
 
     - name: Setup directory for Kubernetes environment for root
       ansible.builtin.file:
@@ -197,7 +202,8 @@
       when:
         - hostvars['127.0.0.1']['docker_username'] and hostvars['127.0.0.1']['docker_password']
         - "'dockerregcred' not in k8s_secret.stdout"
-
+      no_log: true
+      
     - name: Add docker secret to default service account
       ansible.builtin.shell: >
         kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "dockerregcred"}]}'
@@ -231,10 +237,17 @@
       when: hostvars['127.0.0.1']['k8s_cni'] == "calico"
       tags: init
 
-    - name: Setup Calico SDN network
-      ansible.builtin.command: "kubectl apply -f '{{ calico_yml_file_path }}'"
-      when: hostvars['127.0.0.1']['k8s_cni'] == "calico"
+    - name: Edge / Workstation Install allows pods to scheudle on manager
+      ansible.builtin.command: kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+      failed_when: false
       tags: init
+
+    - name: Setup Calico SDN network
+      ansible.builtin.command: "kubectl apply -f '{{ calico_manifest_url }}'"
+      when: hostvars['127.0.0.1']['k8s_cni'] == "calico"
+      failed_when: false
+      tags: init
+
 
     - name: Delete Flannel yaml file if exists
       ansible.builtin.file:
@@ -262,7 +275,7 @@
       tags: init
 
     - name: Setup Flannel SDN network
-      ansible.builtin.command: "kubectl apply -f '{{ flannel_yml_file_path }}'"
+      ansible.builtin.command: "kubectl apply -f '{{ flannel_manifest_url }}'"
       when: hostvars['127.0.0.1']['k8s_cni'] == "flannel"
       tags: init
 
@@ -310,7 +323,7 @@
       tags: init
 
     - name: Edge / Workstation Install allows pods to scheudle on manager
-      ansible.builtin.command: kubectl taint nodes --all node-role.kubernetes.io/master-
+      ansible.builtin.command: kubectl taint nodes --all node-role.kubernetes.io/control-plane-
       when: groups['manager'][0] == groups['compute'][0] and groups['compute']|length == 1
       failed_when: false
       tags: init
