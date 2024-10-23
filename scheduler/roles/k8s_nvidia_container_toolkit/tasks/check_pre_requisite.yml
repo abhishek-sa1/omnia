@@ -29,3 +29,12 @@
   ansible.builtin.set_fact:
     install_nvidia_container_toolkit: true
   when: "'NVIDIA' in lspci_status.stdout"
+
+- name: Set fact for localhost
+  ansible.builtin.set_fact:
+    is_nvidia_cluster: true
+  delegate_to: localhost
+  delegate_facts: true
+  when:
+    - install_nvidia_container_toolkit is defined
+    - install_nvidia_container_toolkit is true
