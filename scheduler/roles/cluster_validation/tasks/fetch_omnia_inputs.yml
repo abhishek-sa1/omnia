@@ -58,6 +58,18 @@
       ansible.builtin.fail:
         msg: "{{ omnia_config_syntax_fail_msg }} Error: {{ include_omnia_config.message }}"
 
+- name: Set facts for non common variables with telemetry config
+  ansible.builtin.set_fact:
+    ansible_config_file_path: "{{ omnia_config.ansible_config_file_path }}"
+    mariadb_password: "{{ omnia_config.mariadb_password }}"
+    slurm_installation_type: "{{ omnia_config.slurm_installation_type }}"
+    restart_slurm_services: "{{ omnia_config.restart_slurm_services }}"
+    topology_manager_policy: "{{ omnia_config.topology_manager_policy }}"
+    topology_manager_scope: "{{ omnia_config.topology_manager_scope }}"
+    run_intel_gaudi_tests: "{{ omnia_config.run_intel_gaudi_tests | default(false) }}"
+    csi_powerscale_driver_secret_file_path: "{{ omnia_config.csi_powerscale_driver_secret_file_path }}"
+    csi_powerscale_driver_values_file_path: "{{ omnia_config.csi_powerscale_driver_values_file_path }}"
+
 - name: Validate input parameters are not empty
   ansible.builtin.fail:
     msg: "{{ input_config_failure_msg }}"
@@ -215,18 +227,6 @@
     - name: Set flag for csi powerscale driver installation to true after assertion pass
       ansible.builtin.set_fact:
         csi_driver_powerscale_precheck_pass: true
-
-- name: Set facts for non common variables with telemetry config
-  ansible.builtin.set_fact:
-    ansible_config_file_path: "{{ omnia_config.ansible_config_file_path }}"
-    mariadb_password: "{{ omnia_config.mariadb_password }}"
-    slurm_installation_type: "{{ omnia_config.slurm_installation_type }}"
-    restart_slurm_services: "{{ omnia_config.restart_slurm_services }}"
-    topology_manager_policy: "{{ omnia_config.topology_manager_policy }}"
-    topology_manager_scope: "{{ omnia_config.topology_manager_scope }}"
-    run_intel_gaudi_tests: "{{ omnia_config.run_intel_gaudi_tests | default(false) }}"
-    csi_powerscale_driver_secret_file_path: "{{ omnia_config.csi_powerscale_driver_secret_file_path }}"
-    csi_powerscale_driver_values_file_path: "{{ omnia_config.csi_powerscale_driver_values_file_path }}"
 
 - name: Encrypt input config file
   ansible.builtin.command: >-
