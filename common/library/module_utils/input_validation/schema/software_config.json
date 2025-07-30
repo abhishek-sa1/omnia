@@ -108,5 +108,5 @@
       "description": "Array of Intel Gaudi components."
     }
   },
-  "required": ["cluster_os_type", "iso_file_path", "cluster_os_version", "repo_config", "softwares"]
+  "required": ["cluster_os_type", "cluster_os_version", "x86_64_iso_file_path", "aarch64_iso_file_path", "repo_config", "softwares"]
 }
