@@ -29,7 +29,7 @@ def validate_osimage(osimage):
         raise ValueError("osimage must be a string")
     return osimage
 
-def nodeset_mapping_nodes(install_osimage_x86_64, install_osimage_aarch_64, service_osimage, discovery_mechanism, module):
+def nodeset_mapping_nodes(install_osimage_x86_64, install_osimage_aarch64, service_osimage, discovery_mechanism, module):
     """
     Retrieves the nodes from the cluster.nodeinfo table in omniadb and
     then sets the osimage using nodeset command.
@@ -48,7 +48,7 @@ def nodeset_mapping_nodes(install_osimage_x86_64, install_osimage_aarch_64, serv
     conn.close()
 
     install_osimage_x86_64 = validate_osimage(install_osimage_x86_64)
-    install_osimage_aarch_64 = validate_osimage(install_osimage_aarch_64)
+    install_osimage_aarch64 = validate_osimage(install_osimage_aarch64)
     service_osimage = validate_osimage(service_osimage)
 
     # Establish connection with omniadb
@@ -85,7 +85,7 @@ def nodeset_mapping_nodes(install_osimage_x86_64, install_osimage_aarch_64, serv
         if output:
 
             new_mapping_nodes_aarch64.append(node[0])
-            command = ["/opt/xcat/sbin/nodeset", node[0], f"osimage={install_osimage_aarch_64}"]
+            command = ["/opt/xcat/sbin/nodeset", node[0], f"osimage={install_osimage_aarch64}"]
             try:
                 subprocess.run(command, capture_output=True, shell=False, check=True)
                 changed = True
@@ -104,7 +104,7 @@ def main():
     module_args = {
         'discovery_mechanism':{'type':"str", 'required':True},
         'install_osimage_x86_64':{'type':"str", 'required':True},
-        'install_osimage_aarch_64':{'type':"str", 'required':True},
+        'install_osimage_aarch64':{'type':"str", 'required':True},
         'service_osimage':{'type':"str", 'required':True}
     }
 
@@ -114,7 +114,7 @@ def main():
         if module.params["discovery_mechanism"] == "mapping":
             result = nodeset_mapping_nodes(
                 module.params["install_osimage_x86_64"],
-                module.params["install_osimage_aarch_64"],
+                module.params["install_osimage_aarch64"],
                 module.params["service_osimage"],
                 module.params["discovery_mechanism"],
                 module
