@@ -98,14 +98,18 @@ def validate_software_config(
                     )
                 )
 
-    iso_file_path = data.get("iso_file_path", "")
-    not_valid_iso_msg = validation_utils.verify_iso_file(
-        iso_file_path, cluster_os_type, cluster_os_version
-    )
-    if not_valid_iso_msg:
-        errors.append(
-            create_error_msg(
-                "iso_file_path", iso_file_path, not_valid_iso_msg))
+    iso_file_paths = {
+        "x86_64": data.get("x86_64_iso_file_path", ""),
+        "aarch64": data.get("aarch64_iso_file_path", ""),
+    }
+    for arch, iso_file_path in iso_file_paths.items():
+        not_valid_iso_msg = validation_utils.verify_iso_file(
+            iso_file_path, cluster_os_type, cluster_os_version
+        )
+        if not_valid_iso_msg:
+            errors.append(
+                create_error_msg(
+                    f"{arch}_iso_file_path", iso_file_path, not_valid_iso_msg))
 
     #software groups and subgroups l2 validation
     # Check for the additional software field

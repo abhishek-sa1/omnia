@@ -44,8 +44,8 @@
       user_config.cluster_os_version | length < 1 or
       user_config.repo_config | length < 1 or
       user_config.softwares is not defined or
-      user_config.iso_file_path is not defined or
-      user_config.iso_file_path | length < 1
+      user_config.x86_64_iso_file_path is not defined or
+      user_config.aarch64_iso_file_path is not defined
 
 - name: Set facts for cluster
   ansible.builtin.set_fact:
@@ -54,37 +54,8 @@
     provision_os_version: "{{ user_config.cluster_os_version }}"
     softwares: "{{ user_config.softwares }}"
     cluster_os_version: "{{ user_config.cluster_os_version }}"
-    iso_file_path: "{{ user_config.iso_file_path }}"
-
-# - name: Set variable 'os_release' to 'jammy' if OS is Ubuntu and version is 22.04
-#   ansible.builtin.set_fact:
-#     os_release: "jammy"
-#   when: provision_os == 'ubuntu' and provision_os_version == '22.04'
-
-# - name: Set variable 'os_release' to 'focal' if OS is Ubuntu and version is 20.04
-#   ansible.builtin.set_fact:
-#     os_release: "focal"
-#   when: provision_os == 'ubuntu' and provision_os_version == '20.04'
-
-# - name: Set variable 'os_release' to 'noble' if OS is Ubuntu and version is 24.04
-#   ansible.builtin.set_fact:
-#     os_release: "noble"
-#   when: provision_os == 'ubuntu' and provision_os_version == '24.04'
-
-# - name: Set Openldap release version for Ubuntu 22.04
-#   ansible.builtin.set_fact:
-#     openldap_release: "jammy"
-#   when: provision_os == 'ubuntu' and os_release == 'jammy'
-
-# - name: Set Openldap release version for Ubuntu 20.04
-#   ansible.builtin.set_fact:
-#     openldap_release: "bullseye"
-#   when: provision_os == 'ubuntu' and os_release == 'focal'
-
-# - name: Set Openldap release version for Ubuntu 24.04
-#   ansible.builtin.set_fact:
-#     openldap_release: "trixie"
-#   when: provision_os == 'ubuntu' and os_release == 'noble'
+    x86_64_iso_file_path: "{{ user_config.x86_64_iso_file_path }}"
+    aarch64_iso_file_path: "{{ user_config.aarch64_iso_file_path }}"
 
 - name: Include local_repo_config.yml vars
   block:
@@ -155,3 +126,13 @@
   ansible.builtin.set_fact:
     group_to_additional_sw_package_map: "{{ group_to_additional_sw_package_map.grp_pkg_map }}"
   when: additional_software_packages
+
+- name: Set fact for x86_64_iso status
+  ansible.builtin.set_fact:
+    x86_64_iso_status: true
+  when: x86_64_iso_file_path | length > 1
+
+- name: Set fact for aarch64_iso status
+  ansible.builtin.set_fact:
+    aarch64_iso_status: true
+  when: aarch64_iso_file_path | length > 1

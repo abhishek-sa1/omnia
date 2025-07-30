@@ -25,9 +25,15 @@
     dest: "{{ synclists_dest_path }}"
     mode: "{{ dir_permission }}"
 
-- name: Configure synclist to compute osimage
-  ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image }} synclists={{ synclists_dest_path }}"
+- name: Configure synclist to compute osimage - x86_64
+  ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_x86_64 }} synclists={{ synclists_dest_path }}"
   changed_when: true
+  when: x86_64_iso_status
+
+- name: Configure synclist to compute osimage - aarch64
+  ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_aarch64 }} synclists={{ synclists_dest_path }}"
+  changed_when: true
+  when: aarch64_iso_status
 
 - name: Configure synclist to service osimage
   ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ service_os_image }} synclists={{ synclists_dest_path }} otherpkgdir='' otherpkglist=''"

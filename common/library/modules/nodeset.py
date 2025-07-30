@@ -29,7 +29,7 @@ def validate_osimage(osimage):
         raise ValueError("osimage must be a string")
     return osimage
 
-def nodeset_mapping_nodes(install_osimage, service_osimage, discovery_mechanism, module):
+def nodeset_mapping_nodes(install_osimage_x86_64, install_osimage_aarch_64, service_osimage, discovery_mechanism, module):
     """
     Retrieves the nodes from the cluster.nodeinfo table in omniadb and
     then sets the osimage using nodeset command.
@@ -38,22 +38,27 @@ def nodeset_mapping_nodes(install_osimage, service_osimage, discovery_mechanism,
     # Establish connection with cluster.nodeinfo
     conn = omniadb_connection.create_connection()
     cursor = conn.cursor()
-    sql = "SELECT node, role FROM cluster.nodeinfo WHERE discovery_mechanism = %s"
-    cursor.execute(sql, (discovery_mechanism,))
-    node_name = cursor.fetchall()
+    sql = "SELECT node, role FROM cluster.nodeinfo WHERE discovery_mechanism = %s and architecture = %s"
+    cursor.execute(sql, (discovery_mechanism,"x86_64",))
+    node_name_x86_64 = cursor.fetchall()
+    sql = "SELECT node, role FROM cluster.nodeinfo WHERE discovery_mechanism = %s and architecture = %s"
+    cursor.execute(sql, (discovery_mechanism,"aarch64",))
+    node_name_aarch64 = cursor.fetchall()
     cursor.close()
     conn.close()
 
-    install_osimage = validate_osimage(install_osimage)
+    install_osimage_x86_64 = validate_osimage(install_osimage_x86_64)
+    install_osimage_aarch_64 = validate_osimage(install_osimage_aarch_64)
     service_osimage = validate_osimage(service_osimage)
 
     # Establish connection with omniadb
     conn = omniadb_connection.create_connection_xcatdb()
     cursor = conn.cursor()
-    new_mapping_nodes = []
+    new_mapping_nodes_x86_64 = []
+    new_mapping_nodes_aarch64 = []
     changed = False
 
-    for node in node_name:
+    for node in node_name_x86_64:
         sql = "SELECT exists(SELECT node FROM nodelist WHERE node = %s AND status IS NULL)"
         cursor.execute(sql, (node[0],))
         output = cursor.fetchone()[0]
@@ -62,10 +67,25 @@ def nodeset_mapping_nodes(install_osimage, service_osimage, discovery_mechanism,
             if service_osimage != "None" and 'service_node' in node[1]:
                 osimage = service_osimage
             else:
-                osimage = install_osimage
+                osimage = install_osimage_x86_64
 
-            new_mapping_nodes.append(node[0])
+            new_mapping_nodes_x86_64.append(node[0])
             command = ["/opt/xcat/sbin/nodeset", node[0], f"osimage={osimage}"]
+            try:
+                subprocess.run(command, capture_output=True, shell=False, check=True)
+                changed = True
+            except subprocess.CalledProcessError as e:
+                module.warn(f"Failed to execute command '{command}' for node {node[0]}: {e}")
+
+    for node in node_name_aarch64:
+        sql = "SELECT exists(SELECT node FROM nodelist WHERE node = %s AND status IS NULL)"
+        cursor.execute(sql, (node[0],))
+        output = cursor.fetchone()[0]
+
+        if output:
+
+            new_mapping_nodes_aarch64.append(node[0])
+            command = ["/opt/xcat/sbin/nodeset", node[0], f"osimage={install_osimage_aarch_64}"]
             try:
                 subprocess.run(command, capture_output=True, shell=False, check=True)
                 changed = True
@@ -75,7 +95,7 @@ def nodeset_mapping_nodes(install_osimage, service_osimage, discovery_mechanism,
     cursor.close()
     conn.close()
 
-    return {"changed": changed, "nodes_updated": new_mapping_nodes}
+    return {"changed": changed, "nodes_updated_x86_64": new_mapping_nodes_x86_64, "nodes_updated_aarch64": new_mapping_nodes_aarch64 }
 
 def main():
     """
@@ -83,7 +103,8 @@ def main():
     """
     module_args = {
         'discovery_mechanism':{'type':"str", 'required':True},
-        'install_osimage':{'type':"str", 'required':True},
+        'install_osimage_x86_64':{'type':"str", 'required':True},
+        'install_osimage_aarch_64':{'type':"str", 'required':True},
         'service_osimage':{'type':"str", 'required':True}
     }
 
@@ -92,7 +113,8 @@ def main():
     try:
         if module.params["discovery_mechanism"] == "mapping":
             result = nodeset_mapping_nodes(
-                module.params["install_osimage"],
+                module.params["install_osimage_x86_64"],
+                module.params["install_osimage_aarch_64"],
                 module.params["service_osimage"],
                 module.params["discovery_mechanism"],
                 module

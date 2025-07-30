@@ -13,50 +13,61 @@
 # limitations under the License.
 ---
 
+- name: Initialize provision_os_image_x86_64
+  ansible.builtin.set_fact:
+    provision_os_image_x86_64: "None"
+  when: provision_os_image_x86_64 is not defined
+
+- name: Initialize provision_os_image_aarch64
+  ansible.builtin.set_fact:
+    provision_os_image_aarch64: "None"
+  when: provision_os_image_aarch64 is not defined
+
 - name: Fetch xcat osimage name for provision_os
   ansible.builtin.shell: >
     set -o pipefail && \
-    {{ xcat_path }}/lsdef -t osimage | grep "{{ osimage_search_key }}" | grep "{{ provision_os }}" | grep "{{ provision_os_version }}"
+    {{ xcat_path }}/lsdef -t osimage | grep -E "{{ osimage_search_key }}|{{ architecture }}|{{ provision_os }}|{{ provision_os_version }}"
   changed_when: false
   register: fetch_osimage
   failed_when: false
 
-- name: Set provision_os_image
+- name: Set provision_os_image_{{ architecture }}
   ansible.builtin.set_fact:
-    provision_os_image: "{{ fetch_osimage.stdout.split(' ')[0] }}"
+    "provision_os_image_{{ architecture }}": "{{ fetch_osimage.stdout.split(' ')[0] }}"
   when: fetch_osimage.rc == 0
 
 - name: Retry fetching xcat osimage name for provision_os
   ansible.builtin.shell: >
     set -o pipefail && \
-    {{ xcat_path }}/lsdef -t osimage | grep "{{ osimage_search_key }}" | grep "{{ provision_os }}"
+    {{ xcat_path }}/lsdef -t osimage | grep -E "{{ osimage_search_key }}|{{ architecture }}|{{ provision_os }}"
   changed_when: false
   register: retry_fetch_osimage
   when: fetch_osimage.rc != 0
 
-- name: Fail if osimage not present
+- name: Fail if osimage not present - {{ architecture }}
   ansible.builtin.fail:
     msg: "{{ fail_os_image }}"
   when:
     - retry_fetch_osimage.rc is defined
     - retry_fetch_osimage.rc != 0
 
-- name: Set provision_os_image
+- name: Set provision_os_image_{{ architecture }}
   ansible.builtin.set_fact:
-    provision_os_image: "{{ retry_fetch_osimage.stdout.split(' ')[0] }}"
+    "provision_os_image_{{ architecture }}": "{{ retry_fetch_osimage.stdout.split(' ')[0] }}"
   when: fetch_osimage.rc != 0
 
-# OS image for service role
-- name: Set service_os_image
+- name: Initialize service_os_image
   ansible.builtin.set_fact:
     service_os_image: "None"
+  when: service_os_image is not defined
 
 - name: Set service os image
+  when: architecture == "x86_64"
   block:
     - name: Fetch xcat service osimage name
       ansible.builtin.shell: >
         set -o pipefail && \
-        {{ xcat_path }}/lsdef -t osimage | grep "{{ service_osimage_search_key }}" | grep "{{ provision_os }}" | grep "{{ provision_os_version }}"
+        {{ xcat_path }}/lsdef -t osimage | grep -E "{{ service_osimage_search_key }}|{{ architecture }}|{{ provision_os }}|{{ provision_os_version }}"
       changed_when: false
       register: fetch_service_osimage
       failed_when: false
@@ -69,7 +80,7 @@
     - name: Retry fetching xcat service osimage name
       ansible.builtin.shell: >
         set -o pipefail && \
-        {{ xcat_path }}/lsdef -t osimage | grep "{{ service_osimage_search_key }}" | grep "{{ provision_os }}"
+        {{ xcat_path }}/lsdef -t osimage | grep -E "{{ service_osimage_search_key }}|{{ architecture }}|{{ provision_os }}"
       changed_when: false
       register: retry_fetch_service_osimage
       when:

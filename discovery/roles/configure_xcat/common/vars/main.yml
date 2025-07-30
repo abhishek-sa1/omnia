@@ -34,8 +34,9 @@ ipmi_success_msg: "Successfully updated IPMI table"
 ipmi_fail_msg: "Failed creating genesis image"
 
 # Usage: fetch_osimage.yml
-fail_os_image: "OS image not found for cluster_os {{ provision_os }} and cluster_os_version {{ provision_os_version }}.
-Please provide the proper ISO file in provision_config.yml."
+fail_os_image: |
+  "Error: Invalid osimage specified for {{ architecture }}.
+  Provide a valid ISO file path in software_config.json matches the cluster_os {{ provision_os }} and cluster_os_version {{ provision_os_version }}."
 
 # Usage: configue_proxy.yml
 oim_os_redhat: "redhat"
