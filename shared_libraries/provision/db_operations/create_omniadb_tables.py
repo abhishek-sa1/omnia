@@ -128,7 +128,7 @@ def create_db_table(conn):
         cluster_name VARCHAR(30),
         parent VARCHAR(30),
         location_id VARCHAR(30),
-        architecture VARCHAR(5),
+        architecture VARCHAR(10),
         status VARCHAR(65),
         discovery_mechanism VARCHAR(65),
         bmc_mode VARCHAR(30),

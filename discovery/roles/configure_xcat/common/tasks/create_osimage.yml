@@ -88,12 +88,12 @@
     - name: Fetch osimage names
       ansible.builtin.include_tasks: fetch_osimage.yml
 
-    - name: Modify comput osimages with xCAT install directory - x86_64
+    - name: Modify compute osimages with xCAT install directory - x86_64
       ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ provision_os_image_x86_64 }} pkgdir={{ xcat_install_dir }}"
       changed_when: true
       when: architecture == "x86_64"
 
-    - name: Modify comput osimages with xCAT install directory - aarch64
+    - name: Modify compute osimages with xCAT install directory - aarch64
       ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ provision_os_image_aarch64 }} pkgdir={{ xcat_install_dir }}"
       changed_when: true
       when: architecture == "aarch64"
