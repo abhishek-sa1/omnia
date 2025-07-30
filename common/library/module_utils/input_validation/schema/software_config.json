@@ -13,12 +13,10 @@
     },
     "x86_64_iso_file_path": {
       "type": "string",
-      "pattern": "^.*\\.iso$",
       "description": "Path of the x86_64 ISO file to be used for provisioning the clusters"
     },
     "aarch64_iso_file_path": {
       "type": "string",
-      "pattern": "^.*\\.iso$",
       "description": "Path of the aarch64 ISO file to be used for provisioning the clusters"
     },
     "repo_config": {
