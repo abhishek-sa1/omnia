@@ -24,9 +24,10 @@ node_obj_nm = []
 GROUPS_STATIC = "all,bmc_static"
 GROUPS_DYNAMIC = "all,bmc_dynamic"
 CHAIN_SETUP = "runcmd=bmcsetup"
-provision_os_image = sys.argv[1]
+provision_os_image_x86_64 = sys.argv[1]
 service_os_image = sys.argv[2]
-CHAIN_OS = f"osimage={provision_os_image}"
+provision_os_image_aarch64 = sys.argv[5]
+CHAIN_OS_X86_64 = f"osimage={provision_os_image_x86_64}"
 DISCOVERY_MECHANISM = "mtms"
 
 
@@ -47,7 +48,7 @@ def get_node_obj():
     update_node_obj_nm()
 
 
-def update_node_obj_nm(chain_os=CHAIN_OS):
+def update_node_obj_nm(chain_os=CHAIN_OS_X86_64):
     """
     Updates the node objects in the database.
 
@@ -96,7 +97,7 @@ def update_node_obj_nm(chain_os=CHAIN_OS):
                      FROM cluster.nodeinfo
                      WHERE service_tag = %s"""
             cursor.execute(sql, params)
-            node_name, admin_ip, bmc_ip, mode, role, cluster_name, group_name, _ = cursor.fetchone()
+            node_name, admin_ip, bmc_ip, mode, role, cluster_name, group_name, architecture = cursor.fetchone()
 
             if mode is None:
                 print("No device is found!")
@@ -104,7 +105,10 @@ def update_node_obj_nm(chain_os=CHAIN_OS):
                 if 'service_node' in role:
                     chain_os = f"osimage={service_os_image}"
                 else:
-                    chain_os = f"osimage={provision_os_image}"
+                    if architecture == "x86_64":
+                        chain_os = f"osimage={provision_os_image_x86_64}"
+                    elif architecture == "aarch64":
+                        chain_os = f"osimage={provision_os_image_aarch64}"
                 command = ["/opt/xcat/bin/chdef", node_name, f"ip={admin_ip}",
                            f"groups={GROUPS_STATIC},{role},{cluster_name},{group_name}",
                            f"chain={chain_os}", f"xcatmaster={oim_admin_ip}"]
