@@ -20,7 +20,7 @@
     MANPATH: "{{ xcat_manpath_env }}"
     PERL_BADLANG: "{{ perl_badlang_env }}"
   block:
-    - name: Include vars
+    - name: Include mtms role vars
       ansible.builtin.include_vars: "{{ role_path }}/../../../discovery/roles/discovery_mechanism/mtms/vars/main.yml"
       when: discovery_mech_static_bmc or discovery_mech_dynamic_bmc
 
