@@ -20,6 +20,11 @@
     rocm_version: "omnia_default"
     intelgaudi_version: "omnia_default"
 
+- name: Initialize aarch64_iso_status and x86_64_iso_status
+  ansible.builtin.set_fact:
+    aarch64_iso_status: false
+    x86_64_iso_status: false
+
 - name: Load software_config.json as user_config
   block:
     - name: Load software_config.json as user_config
