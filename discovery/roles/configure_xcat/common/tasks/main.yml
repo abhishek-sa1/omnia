@@ -55,8 +55,16 @@
         iso_file_path: "{{ aarch64_iso_file_path }}"
         architecture: "aarch64"
 
-    - name: Fetch osimage name
+    - name: Fetch osimage name - x86_64
       ansible.builtin.include_tasks: fetch_osimage.yml
+      vars:
+        architecture: "x86_64"
+      when: not nfs_used
+
+    - name: Fetch osimage name - aarch64
+      ansible.builtin.include_tasks: fetch_osimage.yml
+      vars:
+        architecture: "aarch64"
       when: not nfs_used
 
     - name: Configure xCAT on {{ provision_os }}
