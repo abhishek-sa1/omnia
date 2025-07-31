@@ -20,7 +20,7 @@
 - name: Check diskful osimage is created - {{ architecture }}
   ansible.builtin.shell: >
     set -o pipefail && \
-    {{ xcat_path }}/lsdef -t osimage | grep -E "{{ osimage_search_key }}|{{ architecture }}|{{ provision_os }}|{{ provision_os_version }}"
+    {{ xcat_path }}/lsdef -t osimage | grep -E "{{ provision_os }}.*{{ provision_os_version }}.*{{ architecture }}.*{{ osimage_search_key }}"
   changed_when: false
   failed_when: false
   register: diskful_osimage_check

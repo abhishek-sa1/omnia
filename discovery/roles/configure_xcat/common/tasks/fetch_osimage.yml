@@ -26,7 +26,7 @@
 - name: Fetch xcat osimage name for provision_os
   ansible.builtin.shell: >
     set -o pipefail && \
-    {{ xcat_path }}/lsdef -t osimage | grep -E "{{ osimage_search_key }}|{{ architecture }}|{{ provision_os }}|{{ provision_os_version }}"
+    {{ xcat_path }}/lsdef -t osimage | grep -E "{{ provision_os }}.*{{ provision_os_version }}.*{{ architecture }}.*{{ osimage_search_key }}"
   changed_when: false
   register: fetch_osimage
   failed_when: false
@@ -39,7 +39,7 @@
 - name: Retry fetching xcat osimage name for provision_os
   ansible.builtin.shell: >
     set -o pipefail && \
-    {{ xcat_path }}/lsdef -t osimage | grep -E "{{ osimage_search_key }}|{{ architecture }}|{{ provision_os }}"
+    {{ xcat_path }}/lsdef -t osimage | grep -E "{{ provision_os }}.*{{ architecture }}.*{{ osimage_search_key }}"
   changed_when: false
   register: retry_fetch_osimage
   when: fetch_osimage.rc != 0
@@ -67,7 +67,7 @@
     - name: Fetch xcat service osimage name
       ansible.builtin.shell: >
         set -o pipefail && \
-        {{ xcat_path }}/lsdef -t osimage | grep -E "{{ service_osimage_search_key }}|{{ architecture }}|{{ provision_os }}|{{ provision_os_version }}"
+        {{ xcat_path }}/lsdef -t osimage | grep -E "{{ provision_os }}.*{{ provision_os_version }}.*{{ architecture }}.*{{ service_osimage_search_key }}"
       changed_when: false
       register: fetch_service_osimage
       failed_when: false
@@ -80,7 +80,7 @@
     - name: Retry fetching xcat service osimage name
       ansible.builtin.shell: >
         set -o pipefail && \
-        {{ xcat_path }}/lsdef -t osimage | grep -E "{{ service_osimage_search_key }}|{{ architecture }}|{{ provision_os }}"
+        {{ xcat_path }}/lsdef -t osimage | grep -E "{{ provision_os }}.*{{ architecture }}.*{{ service_osimage_search_key }}"
       changed_when: false
       register: retry_fetch_service_osimage
       when:
