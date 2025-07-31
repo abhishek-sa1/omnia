@@ -33,9 +33,38 @@
     - provision_os_version in diskful_osimage_check.stdout
 
 - name: Create diskful osimage locally - {{ architecture }}
-  ansible.builtin.command: "{{ xcat_sbin_path }}/copycds {{ iso_file_path }}"
-  changed_when: true
   when: not nfs_used
+  block:
+    - name: Create diskful osimage locally - {{ architecture }}
+      ansible.builtin.command: "{{ xcat_sbin_path }}/copycds {{ iso_file_path }}"
+      changed_when: true
+
+    - name: Configure grub file
+      when: architecture == "aarch64"
+      block:    
+        - name: Get os arch and os version
+          ansible.builtin.shell: >
+            set -o pipefail && \
+            {{ xcat_sbin_path }}/copycds -i {{ iso_file_path }} | grep -E "ARCH|DISTNAME" | cut -d':' -f2
+          changed_when: false
+          register: osimage_info
+          failed_when: osimage_info.stdout_lines | length != 2
+
+        - name: Set os arch and os dist
+          ansible.builtin.set_fact:
+            os_arch: "{{ osimage_info.stdout_lines[1] }}"
+            os_dist: "{{ osimage_info.stdout_lines[0] }}"
+
+        - name: Set install directory
+          ansible.builtin.set_fact:
+            xcat_install_dir: "{{ xcat_install_dir }}/{{ os_dist }}/{{ os_arch }}"
+
+        - name: Copy grub2 files - aarch64
+          ansible.builtin.copy:
+            src: "{{ xcat_install_dir }}/EFI/BOOT/grubaa64.efi"
+            dest: "{{ tftp_grub2_aarch64_path }}"
+            remote_src: true
+            mode: "{{ grub_mode }}"
 
 - name: Create diskful osimage on NFS - {{ architecture }}
   when: nfs_used
@@ -102,6 +131,14 @@
       ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ service_os_image }} pkgdir={{ xcat_install_dir }}"
       changed_when: true
       when: architecture == "x86_64"
+    
+    - name: Copy grub2 files - aarch64
+      ansible.builtin.copy:
+        src: "{{ xcat_install_dir }}/EFI/BOOT/grubaa64.efi"
+        dest: "{{ tftp_grub2_aarch64_path }}"
+        remote_src: true
+        mode: "{{ grub_mode }}"
+      when: architecture == "aarch64" 
 
   rescue:
     - name: Fail if NFS osimage creation/saving failed
