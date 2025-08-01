@@ -41,7 +41,7 @@
 
     - name: Configure grub file
       when: architecture == "aarch64"
-      block:    
+      block:
         - name: Get os arch and os version
           ansible.builtin.shell: >
             set -o pipefail && \
@@ -131,14 +131,14 @@
       ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ service_os_image }} pkgdir={{ xcat_install_dir }}"
       changed_when: true
       when: architecture == "x86_64"
-    
+  
     - name: Copy grub2 files - aarch64
       ansible.builtin.copy:
         src: "{{ xcat_install_dir }}/EFI/BOOT/grubaa64.efi"
         dest: "{{ tftp_grub2_aarch64_path }}"
         remote_src: true
         mode: "{{ grub_mode }}"
-      when: architecture == "aarch64" 
+      when: architecture == "aarch64"
 
   rescue:
     - name: Fail if NFS osimage creation/saving failed
