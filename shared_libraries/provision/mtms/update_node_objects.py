@@ -28,6 +28,7 @@ provision_os_image_x86_64 = sys.argv[1]
 service_os_image = sys.argv[2]
 provision_os_image_aarch64 = sys.argv[5]
 CHAIN_OS_X86_64 = f"osimage={provision_os_image_x86_64}"
+CHAIN_OS_AARCH64 = f"osimage={provision_os_image_aarch64}"
 DISCOVERY_MECHANISM = "mtms"
 
 
@@ -102,7 +103,7 @@ def update_node_obj_nm():
             if mode is None:
                 print("No device is found!")
             if mode == "static":
-                chain_os = f"osimage={provision_os_image_x86_64 if architecture == 'x86_64' else provision_os_image_aarch64}"
+                chain_os = f"osimage={CHAIN_OS_X86_64 if architecture == 'x86_64' else CHAIN_OS_AARCH64}"
                 command = ["/opt/xcat/bin/chdef", node_name, f"ip={admin_ip}",
                            f"groups={GROUPS_STATIC},{role},{cluster_name},{group_name}",
                            f"chain={chain_os}", f"xcatmaster={oim_admin_ip}"]
@@ -110,7 +111,7 @@ def update_node_obj_nm():
             if mode == "dynamic":
                 command = ["/opt/xcat/bin/chdef", node_name,
                            f"ip={admin_ip}", f"groups={GROUPS_DYNAMIC}",
-                           f"chain={CHAIN_SETUP},{provision_os_image_x86_64}",
+                           f"chain={CHAIN_SETUP},{CHAIN_OS_X86_64}",
                            f"bmc={bmc_ip}", f"xcatmaster={oim_admin_ip}"]
                 subprocess.run(command,check=False)
 
