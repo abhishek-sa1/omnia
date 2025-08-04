@@ -28,12 +28,6 @@
         dest: "{{ synclists_dest_path_x86_64 }}"
         mode: "{{ dir_permission }}"
 
-    - name: Copy synclist in xcat folder - aarch64
-      ansible.builtin.template:
-        src: "{{ synclists_src_path_aarch64 }}"
-        dest: "{{ synclists_dest_path_x86_64 }}"
-        mode: "{{ dir_permission }}"
-
     - name: Configure synclist to compute osimage - x86_64
       ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_x86_64 }} synclists={{ synclists_dest_path_x86_64 }}"
       changed_when: true

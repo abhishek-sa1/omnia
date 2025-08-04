@@ -53,14 +53,14 @@
   ansible.builtin.set_fact:
     rpm_base_urls_aarch64: "{{ rpm_base_urls_aarch64 | default([]) + rpm_base_urls_common | default([]) }}"
 
-- name: Use each item in base_url for template
+- name: Use each item in base_url for template - x86_64
   ansible.builtin.template:
     src: "{{ omnia_repo_template_src }}"
     dest: "{{ repos_share_path_x86_64 }}/{{ item.name }}.repo"
     mode: "{{ file_permission }}"
   loop: "{{ rpm_base_urls_x86_64 }}"
 
-- name: Use each item in base_url for template
+- name: Use each item in base_url for template - aarch64
   ansible.builtin.template:
     src: "{{ omnia_repo_template_src }}"
     dest: "{{ repos_share_path_aarch64 }}/{{ item.name }}.repo"
