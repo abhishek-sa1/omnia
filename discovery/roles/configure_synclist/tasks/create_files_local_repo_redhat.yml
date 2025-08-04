@@ -21,14 +21,47 @@
 
 - name: Set fact for rpm base_url and name
   ansible.builtin.set_fact:
-    rpm_base_urls: "{{ pulp_distribution_rpm_baseurl.stdout | from_json }}"
+    rpm_base_urls_x86_64: >-
+      {{
+        rpm_base_urls
+        | selectattr('base_url', 'contains', 'x86_64')
+        | list
+      }}
+    rpm_base_urls_aarch64: >-
+      {{
+        rpm_base_urls
+        | selectattr('base_url', 'contains', 'aarch64')
+        | list
+      }}
+    rpm_base_urls_common: >-
+      {{
+        rpm_base_urls
+        | rejectattr('base_url', 'contains', 'x86_64')
+        | rejectattr('base_url', 'contains', 'aarch64')
+        | list
+      }}
+
+- name: Combine x86_64 and common urls
+  ansible.builtin.set_fact:
+    rpm_base_urls_x86_64: "{{ rpm_base_urls_x86_64 | default([]) + rpm_base_urls_common | default([]) }}"
+
+- name: Combine aarch64 and common urls
+  ansible.builtin.set_fact:
+    rpm_base_urls_aarch64: "{{ rpm_base_urls_aarch64 | default([]) + rpm_base_urls_common | default([]) }}"
 
 - name: Use each item in base_url for template
   ansible.builtin.template:
     src: "{{ omnia_repo_template_src }}"
-    dest: "{{ repos_share_path }}/{{ item.name }}.repo"
+    dest: "{{ repos_share_path_x86_64 }}/{{ item.name }}.repo"
     mode: "{{ file_permission }}"
-  loop: "{{ rpm_base_urls }}"
+  loop: "{{ rpm_base_urls_x86_64 }}"
+
+- name: Use each item in base_url for template
+  ansible.builtin.template:
+    src: "{{ omnia_repo_template_src }}"
+    dest: "{{ repos_share_path_aarch64 }}/{{ item.name }}.repo"
+    mode: "{{ file_permission }}"
+  loop: "{{ rpm_base_urls_aarch64 }}"
 
 # Commenting out - waiting for pulp changes for os url to merge
 # - name: Generate and copy RHEL OS Repositories
