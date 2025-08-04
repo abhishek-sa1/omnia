@@ -48,7 +48,7 @@ def get_node_obj():
     update_node_obj_nm()
 
 
-def update_node_obj_nm(chain_os=CHAIN_OS_X86_64):
+def update_node_obj_nm():
     """
     Updates the node objects in the database.
 
@@ -68,7 +68,7 @@ def update_node_obj_nm(chain_os=CHAIN_OS_X86_64):
     - Finally, it closes the cursor and the database connection.
 
     Parameters:
-        chain_os (str): osimage name string
+        None
 
     Returns:
         None
@@ -102,7 +102,7 @@ def update_node_obj_nm(chain_os=CHAIN_OS_X86_64):
             if mode is None:
                 print("No device is found!")
             if mode == "static":
-                chain_os = f"osimage={service_os_image if 'service_node' in role else provision_os_image_x86_64 if architecture == 'x86_64' else provision_os_image_aarch64}"
+                chain_os = f"osimage={provision_os_image_x86_64 if architecture == 'x86_64' else provision_os_image_aarch64}"
                 command = ["/opt/xcat/bin/chdef", node_name, f"ip={admin_ip}",
                            f"groups={GROUPS_STATIC},{role},{cluster_name},{group_name}",
                            f"chain={chain_os}", f"xcatmaster={oim_admin_ip}"]
@@ -110,7 +110,7 @@ def update_node_obj_nm(chain_os=CHAIN_OS_X86_64):
             if mode == "dynamic":
                 command = ["/opt/xcat/bin/chdef", node_name,
                            f"ip={admin_ip}", f"groups={GROUPS_DYNAMIC}",
-                           f"chain={CHAIN_SETUP},{chain_os}",
+                           f"chain={CHAIN_SETUP},{provision_os_image_x86_64}",
                            f"bmc={bmc_ip}", f"xcatmaster={oim_admin_ip}"]
                 subprocess.run(command,check=False)
 
