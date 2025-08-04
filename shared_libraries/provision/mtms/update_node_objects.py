@@ -102,13 +102,7 @@ def update_node_obj_nm(chain_os=CHAIN_OS_X86_64):
             if mode is None:
                 print("No device is found!")
             if mode == "static":
-                if 'service_node' in role:
-                    chain_os = f"osimage={service_os_image}"
-                else:
-                    if architecture == "x86_64":
-                        chain_os = f"osimage={provision_os_image_x86_64}"
-                    elif architecture == "aarch64":
-                        chain_os = f"osimage={provision_os_image_aarch64}"
+                chain_os = f"osimage={service_os_image if 'service_node' in role else provision_os_image_x86_64 if architecture == 'x86_64' else provision_os_image_aarch64}"
                 command = ["/opt/xcat/bin/chdef", node_name, f"ip={admin_ip}",
                            f"groups={GROUPS_STATIC},{role},{cluster_name},{group_name}",
                            f"chain={chain_os}", f"xcatmaster={oim_admin_ip}"]
