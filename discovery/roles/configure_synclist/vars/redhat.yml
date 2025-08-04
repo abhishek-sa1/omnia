@@ -21,6 +21,6 @@ dnf_conf_dest: "{{ syncfiles_share_path }}/conf/dnf.conf"
 
 # Usage: configure_synclist.yml
 synclists_src_path_x86_64: "{{ role_path }}/templates/redhat_86_64.synclist.j2"
-synclists_src_path_aarch64: "{{ role_path }}/templates/redhat_aarch_64.synclist.j2"
+synclists_src_path_aarch64: "{{ role_path }}/templates/redhat_aarch64.synclist.j2"
 synclists_dest_path_x86_64: "{{ synclists_dir }}/redhat_x86_64.synclist"
 synclists_dest_path_aarch64: "{{ synclists_dir }}/redhat_aarch64.synclist"
