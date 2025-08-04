@@ -19,7 +19,11 @@
   register: pulp_distribution_rpm_baseurl
   changed_when: false
 
-- name: Set fact for rpm base_url and name
+- name: Set fact for rpm base_url
+  ansible.builtin.set_fact:
+    rpm_base_urls: "{{ pulp_distribution_rpm_baseurl.stdout | from_json }}"
+
+- name: Set fact for rpm base_url and name for x86_64 and aarch64
   ansible.builtin.set_fact:
     rpm_base_urls_x86_64: >-
       {{
