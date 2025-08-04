@@ -28,14 +28,17 @@ tmp_dir: /opt/osimages
 xcat_install_dir: /install
 mode: "755"
 nfs_image_failure: "Failed to create and/or save osimages with NFS"
+tftp_grub2_aarch64_path: "/tftpboot/boot/grub2/grub2.aarch64"
+grub_mode: 644
 
 # Usage: update_ipmi_table.yml
 ipmi_success_msg: "Successfully updated IPMI table"
 ipmi_fail_msg: "Failed creating genesis image"
 
 # Usage: fetch_osimage.yml
-fail_os_image: "OS image not found for cluster_os {{ provision_os }} and cluster_os_version {{ provision_os_version }}.
-Please provide the proper ISO file in provision_config.yml."
+fail_os_image: |
+  "Error: Invalid osimage specified for {{ architecture }}.
+  Provide a valid ISO file path in software_config.json matches the cluster_os {{ provision_os }} and cluster_os_version {{ provision_os_version }}."
 
 # Usage: configue_proxy.yml
 oim_os_redhat: "redhat"

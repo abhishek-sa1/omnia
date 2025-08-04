@@ -29,7 +29,7 @@
     groups={{ mapping_node_group }},{{ item.roles }},{{ item.group_name }},all
     ip="{{ item.admin_ip | trim }}" mac="{{ item.admin_mac | trim }}"
     hostnames="{{ item.hostname | trim }}" serial="{{ item.service_tag | trim }}"
-    netboot=xnba arch={{ item.architecture }} xcatmaster={{ admin_nic_ip }} -f
+    netboot={{ "xnba" if item.architecture == "x86_64" else "grub2" }} arch={{ item.architecture }} xcatmaster={{ admin_nic_ip }} -f
   loop: "{{ mapping_details }}"
   changed_when: true
   loop_control:
@@ -44,7 +44,7 @@
     groups={{ mapping_node_group }},{{ mapping_bmc_node_group }},{{ item.roles }},{{ item.group_name }},all
     ip="{{ item.admin_ip | trim }}" bmc="{{ item.bmc_ip | trim }}" mgt=ipmi
     mac="{{ item.admin_mac | trim }}" serial="{{ item.service_tag | trim }}"
-    hostnames="{{ item.hostname | trim }}" netboot=xnba arch={{ item.architecture }}
+    hostnames="{{ item.hostname | trim }}" netboot={{ "xnba" if item.architecture == "x86_64" else "grub2" }} arch={{ item.architecture }}
     xcatmaster={{ admin_nic_ip }} -f
   loop: "{{ mapping_details }}"
   changed_when: true

@@ -110,13 +110,9 @@ local_repo_config_file: "{{ hostvars['localhost']['input_project_dir'] }}/local_
 software_config_file: "{{ hostvars['localhost']['input_project_dir'] }}/software_config.json"
 invalid_software_config_fail_msg: |
   Failed. Please provide valid software_config.json file with cluster_os_type, cluster_os_version,
-  iso_file_path and repo_config values.
+  x86_64_iso_file_path, aarch64_iso_file_path and repo_config values.
 local_repo_config_syntax_fail_msg: "Failed. Syntax errors present in local_repo_config.yml. Fix errors and re-run playbook again."
 software_config_syntax_fail_msg: "Failed. Syntax errors present in software_config.json. Fix errors and re-run playbook again."
-iso_file_path_missing_msg: "Incorrect iso_file_path provided. Make sure ISO file is present in the provided iso_file_path."
-iso_file_path_success_msg: "iso_file_path validated"
-iso_file_path_fail_msg: "Failed. Invalid iso_file_path: {{ iso_file_path }} provided. Make sure iso_file_path variable in software_config.json contains value
- mentioned in the variables cluster_type: {{ provision_os }} and cluster_os_version: {{ provision_os_version }} mentioned in software_config.json"
 
 # Usage: validate_local_repo.yml
 metadata_file_path: "/opt/omnia/offline/.data/metadata.yml"
