@@ -658,7 +658,7 @@ def validate_roles_config(
                         create_error_msg(
                             group,
                             f"Group {group} architecture cannot be {grp_architecture}, "
-                            f"if switch ip or bmc details are provided.",
+                            f"if switch details or bmc details are provided.",
                             en_us_validation_msg.AARCH64_SWITCH_IP_MSG
                         )
                     )
