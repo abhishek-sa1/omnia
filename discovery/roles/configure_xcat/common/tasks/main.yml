@@ -59,13 +59,13 @@
       ansible.builtin.include_tasks: fetch_osimage.yml
       vars:
         architecture: "x86_64"
-      when: not nfs_used
+      when: not nfs_used and x86_64_iso_status
 
     - name: Fetch osimage name - aarch64
       ansible.builtin.include_tasks: fetch_osimage.yml
       vars:
         architecture: "aarch64"
-      when: not nfs_used
+      when: not nfs_used and aarch64_iso_status
 
     - name: Configure xCAT on {{ provision_os }}
       ansible.builtin.include_tasks: "{{ role_path }}/../{{ provision_os }}/tasks/main.yml"
