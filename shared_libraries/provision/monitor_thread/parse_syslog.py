@@ -116,6 +116,7 @@ def get_updated_cpu_gpu_info(node: str) -> tuple:
     no_gpu_str = "No GPU Found"
     intel_cpu_str = "Intel CPU Found"
     amd_cpu_str = "AMD CPU Found"
+    nvidia_cpu_str = "NVIDIA CPU Found"
     intel_gpu_str = "Intel GPU Found"
     no_cpu_str = "No CPU Found"
 
@@ -171,6 +172,11 @@ def get_updated_cpu_gpu_info(node: str) -> tuple:
                             # Check if the AMD CPU str is present in the line
                             elif amd_cpu_str in line:
                                 cpu = "amd"
+                                cpu_count = get_count(line)
+                                cpu_found = True
+                            # Check if the NVIDIA CPU str is present in the line
+                            elif nvidia_cpu_str in line:
+                                cpu = "nvidia"
                                 cpu_count = get_count(line)
                                 cpu_found = True
                             # Check if the No CPU str is present in the line
@@ -421,19 +427,25 @@ def update_inventory(node_info_db: tuple, updated_node_info: tuple) -> None:
         if curr_dir != omnia_inventory_dir:
             os.chdir(omnia_inventory_dir)
 
+        cpu_inventory_map = {
+            "intel": "compute_cpu_intel",
+            "amd": "compute_cpu_amd",
+            "nvidia": "compute_cpu_nvidia"
+        }
+        gpu_inventory_map = {
+            "nvidia": "compute_gpu_nvidia",
+            "amd": "compute_gpu_amd",
+            "intel": "compute_gpu_intel"
+        }
         # Update inventory files if the CPU has been modified
         if updated_cpu != db_cpu:
             if db_cpu:
                 # Remove existing hostname from corresponding inventory file
-                inventory_file_str = (
-                    "compute_cpu_intel" if db_cpu == "intel" else "compute_cpu_amd"
-                )
+                inventory_file_str = cpu_inventory_map.get(db_cpu)
                 remove_hostname_inventory(inventory_file_str, hostname)
             if updated_cpu:
                 # Add hostname to corresponding inventory file
-                inventory_file_str = (
-                    "compute_cpu_intel" if updated_cpu == "intel" else "compute_cpu_amd"
-                )
+                inventory_file_str = cpu_inventory_map.get(updated_cpu)
                 add_hostname_inventory(inventory_file_str, hostname)
                 # Add hostname and admin ip to compute_hostname_ip inventory file
                 hostname_ip_str = f"{hostname} ansible_host={admin_ip}"
@@ -443,21 +455,11 @@ def update_inventory(node_info_db: tuple, updated_node_info: tuple) -> None:
         if updated_gpu != db_gpu:
             if db_gpu:
                 # Remove existing hostname from corresponding inventory file
-                if db_gpu == "nvidia":
-                    inventory_file_str = "compute_gpu_nvidia"
-                elif db_gpu == "amd":
-                    inventory_file_str = "compute_gpu_amd"
-                elif db_gpu == "intel":
-                    inventory_file_str = "compute_gpu_intel"
+                inventory_file_str = gpu_inventory_map.get(db_cpu)
                 remove_hostname_inventory(inventory_file_str, hostname)
             if updated_gpu:
                 # Add hostname to corresponding inventory file
-                if updated_gpu == "nvidia":
-                    inventory_file_str = "compute_gpu_nvidia"
-                elif updated_gpu == "amd":
-                    inventory_file_str = "compute_gpu_amd"
-                elif updated_gpu == "intel":
-                    inventory_file_str = "compute_gpu_intel"
+                inventory_file_str = gpu_inventory_map.get(updated_gpu)
                 add_hostname_inventory(inventory_file_str, hostname)
     except Exception as e:
         syslog.syslog(
