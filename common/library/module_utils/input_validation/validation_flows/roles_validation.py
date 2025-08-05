@@ -641,9 +641,8 @@ def validate_roles_config(
             bmc_static_range_provided = not validation_utils.is_string_empty(
                 groups[group].get(bmc_details, {}).get(static_range, None)
             )
-            architecture_provided = not validation_utils.is_string_empty(
-                groups[group].get(architecture, None)
-            )
+            grp_architecture = groups[group].get(architecture, None)
+
             if group in groups_used:
                 errors.append(
                     create_error_msg(
@@ -652,12 +651,12 @@ def validate_roles_config(
                         en_us_validation_msg.GRP_ROLE_MSG
                     )
                 )
-            # if architecture_provided is aarch64 and switch_ip_provided or bmc_static_range_provided is true then error
-            if architecture_provided == "aarch64" and (switch_ip_provided or bmc_static_range_provided):
+
+            if grp_architecture == "aarch64" and (switch_ip_provided or bmc_static_range_provided):
                 errors.append(
                     create_error_msg(
                         group,
-                        f"Group {group} architecture cannot be aarch64 if switch ip or bmc details are provided.",
+                        f"Group {group} architecture cannot be {grp_architecture} if switch ip or bmc details are provided.",
                         en_us_validation_msg.AARCH64_SWITCH_IP_MSG
                     )
                 )
