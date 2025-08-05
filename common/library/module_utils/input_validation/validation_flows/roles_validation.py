@@ -662,117 +662,118 @@ def validate_roles_config(
                     )
                 )
 
-            if switch_ip_provided and switch_ports_provided:
-                switch_ip = groups[group][switch_details][ip]
-                try:
-                    ipaddress.IPv4Address(switch_ip)
-                except Exception as _e:
-                    errors.append(
-                        create_error_msg(
-                            group,
-                            f"Group {group} switch ip is invalid:",
-                            en_us_validation_msg.INVALID_SWITCH_IP_MSG
+            if grp_architecture == "x86_64":
+                if switch_ip_provided and switch_ports_provided:
+                    switch_ip = groups[group][switch_details][ip]
+                    try:
+                        ipaddress.IPv4Address(switch_ip)
+                    except Exception as _e:
+                        errors.append(
+                            create_error_msg(
+                                group,
+                                f"Group {group} switch ip is invalid:",
+                                en_us_validation_msg.INVALID_SWITCH_IP_MSG
+                            )
                         )
-                    )
-                if switch_ip in switch_ip_mapping:
-                    # Check for any switch ip port overlap
-                    if validation_utils.check_port_overlap(
-                        switch_ip_port_mapping.get(switch_ip, "")
-                        + ","
-                        + groups[group][switch_details].get(ports, "")
+                    if switch_ip in switch_ip_mapping:
+                        # Check for any switch ip port overlap
+                        if validation_utils.check_port_overlap(
+                            switch_ip_port_mapping.get(switch_ip, "")
+                            + ","
+                            + groups[group][switch_details].get(ports, "")
+                        ):
+                            errors.append(
+                                create_error_msg(
+                                    group,
+                                    f"Group {group} has duplicate ports for switch ip {switch_ip}, "
+                                    f"this switch ip is shared with "
+                                    f"the following groups: {switch_ip_mapping[switch_ip]}.",
+                                    en_us_validation_msg.DUPLICATE_SWITCH_IP_PORT_MSG
+                                )
+                            )
+                    if not validation_utils.check_port_ranges(
+                        groups[group][switch_details].get(ports, "")
                     ):
                         errors.append(
                             create_error_msg(
                                 group,
-                                f"Group {group} has duplicate ports for switch ip {switch_ip}, "
-                                f"this switch ip is shared with "
-                                f"the following groups: {switch_ip_mapping[switch_ip]}.",
-                                en_us_validation_msg.DUPLICATE_SWITCH_IP_PORT_MSG
+                                f"Group {group} switch port range(s) are invalid, start > end:",
+                                en_us_validation_msg.INVALID_SWITCH_PORTS_MSG
                             )
                         )
-                if not validation_utils.check_port_ranges(
-                    groups[group][switch_details].get(ports, "")
+                    switch_ip_mapping.setdefault(switch_ip, []).append(group)
+                    switch_ip_port_mapping[switch_ip] = (
+                        switch_ip_port_mapping.get(switch_ip, "")
+                        + ","
+                        + groups[group][switch_details].get(ports, "")
+                    )
+                if (switch_ip_provided and not switch_ports_provided) or (
+                    not switch_ip_provided and switch_ports_provided
                 ):
                     errors.append(
                         create_error_msg(
                             group,
-                            f"Group {group} switch port range(s) are invalid, start > end:",
-                            en_us_validation_msg.INVALID_SWITCH_PORTS_MSG
+                            f"Group {group} switch details are incomplete:",
+                            en_us_validation_msg.SWITCH_DETAILS_INCOMPLETE_MSG
                         )
                     )
-                switch_ip_mapping.setdefault(switch_ip, []).append(group)
-                switch_ip_port_mapping[switch_ip] = (
-                    switch_ip_port_mapping.get(switch_ip, "")
-                    + ","
-                    + groups[group][switch_details].get(ports, "")
-                )
-            if (switch_ip_provided and not switch_ports_provided) or (
-                not switch_ip_provided and switch_ports_provided
-            ):
-                errors.append(
-                    create_error_msg(
-                        group,
-                        f"Group {group} switch details are incomplete:",
-                        en_us_validation_msg.SWITCH_DETAILS_INCOMPLETE_MSG
+                if (switch_ip_provided and switch_ports_provided) and not bmc_static_range_provided:
+                    errors.append(
+                        create_error_msg(
+                            group,
+                            f"Group {group} switch details provided:",
+                            en_us_validation_msg.SWITCH_DETAILS_NO_BMC_DETAILS_MSG
+                        )
                     )
-                )
-            if (switch_ip_provided and switch_ports_provided) and not bmc_static_range_provided:
-                errors.append(
-                    create_error_msg(
-                        group,
-                        f"Group {group} switch details provided:",
-                        en_us_validation_msg.SWITCH_DETAILS_NO_BMC_DETAILS_MSG
-                    )
-                )
 
-            # Validate bmc details for each group
-            if not validation_utils.is_string_empty(
-                groups[group].get(bmc_details, {}).get(static_range, None)
-            ):
-                # # Check if bmc details are defined, but enable_switch_based
-                # is true or the bmc_network is not defined
-                # if enable_switch_based or not bmc_network_defined:
-                #     errors.append(create_error_msg(group,
-                #                   "Group " + group + " BMC static range invalid use case.",
-                #                    en_us_validation_msg.bmc_static_range_msg))
-                # Validate the static range is properly defined
-                if not validation_utils.validate_ipv4_range(
-                    groups[group].get(bmc_details, {}).get(static_range, "")
+                # Validate bmc details for each group
+                if not validation_utils.is_string_empty(
+                    groups[group].get(bmc_details, {}).get(static_range, None)
                 ):
-                    errors.append(
-                        create_error_msg(
-                            group,
-                            f"Group {group} BMC static range is invalid.",
-                            en_us_validation_msg.BMC_STATIC_RANGE_INVALID_MSG
-                        )
-                    )
-                elif group not in static_range_mapping:
-                    # A valid static range was provided,
-                    # now a check is performed to ensure static ranges do not overlap
-                    static_range_value = groups[group][bmc_details][static_range]
-                    grp_overlaps = validation_utils.check_bmc_static_range_overlap(
-                        static_range_value, static_range_mapping
-                    )
-                    if len(grp_overlaps) > 0:
+                    # # Check if bmc details are defined, but enable_switch_based
+                    # is true or the bmc_network is not defined
+                    # if enable_switch_based or not bmc_network_defined:
+                    #     errors.append(create_error_msg(group,
+                    #                   "Group " + group + " BMC static range invalid use case.",
+                    #                    en_us_validation_msg.bmc_static_range_msg))
+                    # Validate the static range is properly defined
+                    if not validation_utils.validate_ipv4_range(
+                        groups[group].get(bmc_details, {}).get(static_range, "")
+                    ):
                         errors.append(
                             create_error_msg(
                                 group,
-                                f"Static range {static_range_value} "
-                                f"overlaps with the following group(s): {grp_overlaps}.",
-                                en_us_validation_msg.OVERLAPPING_STATIC_RANGE
+                                f"Group {group} BMC static range is invalid.",
+                                en_us_validation_msg.BMC_STATIC_RANGE_INVALID_MSG
                             )
                         )
-                    static_range_mapping[group] = static_range_value
-                
-                # Check overlap with admin network from network_spec
-                bmc_range = groups[group].get("bmc_details", {}).get("static_range", "")
-                overlap_errors = validation_utils.check_bmc_range_against_admin_network(
-                    bmc_range, admin_static_range, admin_dynamic_range, primary_oim_admin_ip
-                )
-                for error in overlap_errors:
-                    errors.append(
-                        create_error_msg(f"{group}.bmc_details.static_range", bmc_range, error)
+                    elif group not in static_range_mapping:
+                        # A valid static range was provided,
+                        # now a check is performed to ensure static ranges do not overlap
+                        static_range_value = groups[group][bmc_details][static_range]
+                        grp_overlaps = validation_utils.check_bmc_static_range_overlap(
+                            static_range_value, static_range_mapping
+                        )
+                        if len(grp_overlaps) > 0:
+                            errors.append(
+                                create_error_msg(
+                                    group,
+                                    f"Static range {static_range_value} "
+                                    f"overlaps with the following group(s): {grp_overlaps}.",
+                                    en_us_validation_msg.OVERLAPPING_STATIC_RANGE
+                                )
+                            )
+                        static_range_mapping[group] = static_range_value
+                    
+                    # Check overlap with admin network from network_spec
+                    bmc_range = groups[group].get("bmc_details", {}).get("static_range", "")
+                    overlap_errors = validation_utils.check_bmc_range_against_admin_network(
+                        bmc_range, admin_static_range, admin_dynamic_range, primary_oim_admin_ip
                     )
+                    for error in overlap_errors:
+                        errors.append(
+                            create_error_msg(f"{group}.bmc_details.static_range", bmc_range, error)
+                        )
 
 
             # Validate resource_mgr_id is set for groups that belong
