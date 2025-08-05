@@ -757,6 +757,22 @@ init_ssh_config() {
     # Add entry to /root/.ssh/known_hosts file to prevent errors caused by Known host
     ssh-keygen -R "[localhost]:2222" >/dev/null 2>&1  # Remove existing entry if it exists
     ssh-keyscan -p 2222 localhost 2>/dev/null | grep -v "^#" >> $HOME/.ssh/known_hosts  # Scan and add the new key
+
+    # Validate NFS server permission
+    if [ "$share_option" = "NFS" ]; then
+        # Create a temporary file inside $omnia_path
+        temp_file="$omnia_path/temp_file"
+        touch "$temp_file"
+        
+        # Check if the file can be chown to root
+        if chown root:root "$temp_file"; then
+            # If successful, remove the temporary file
+            rm "$temp_file"
+        else
+            echo "Error: Unable to chown file to root in $omnia_path. NFS server permission validation failed. Please ensure no_root_squash option is enabled in the NFS export configuration."
+            exit 1
+        fi
+    fi
 }
 
 start_container_session() {

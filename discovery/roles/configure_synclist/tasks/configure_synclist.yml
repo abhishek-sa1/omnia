@@ -19,17 +19,34 @@
     state: directory
     recurse: true
 
-- name: Copy synclist in xcat folder
-  ansible.builtin.template:
-    src: "{{ synclists_src_path }}"
-    dest: "{{ synclists_dest_path }}"
-    mode: "{{ dir_permission }}"
+- name: Synclist configuration for x86_64
+  when: x86_64_iso_status
+  block:
+    - name: Copy synclist in xcat folder - x86_64
+      ansible.builtin.template:
+        src: "{{ synclists_src_path_x86_64 }}"
+        dest: "{{ synclists_dest_path_x86_64 }}"
+        mode: "{{ dir_permission }}"
 
-- name: Configure synclist to compute osimage
-  ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image }} synclists={{ synclists_dest_path }}"
-  changed_when: true
+    - name: Configure synclist to compute osimage - x86_64
+      ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_x86_64 }} synclists={{ synclists_dest_path_x86_64 }}"
+      changed_when: true
 
-- name: Configure synclist to service osimage
-  ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ service_os_image }} synclists={{ synclists_dest_path }} otherpkgdir='' otherpkglist=''"
-  changed_when: true
-  when: service_role_required
+    - name: Configure synclist to service osimage
+      ansible.builtin.command: >
+        "{{ xcat_path }}/chdef -t osimage -o {{ service_os_image }} synclists={{ synclists_dest_path_x86_64 }} otherpkgdir='' otherpkglist=''"
+      changed_when: true
+      when: service_role_required
+
+- name: Synclist configuration for aarch64
+  when: aarch64_iso_status
+  block:
+    - name: Copy synclist in xcat folder - aarch64
+      ansible.builtin.template:
+        src: "{{ synclists_src_path_aarch64 }}"
+        dest: "{{ synclists_dest_path_aarch64 }}"
+        mode: "{{ dir_permission }}"
+
+    - name: Configure synclist to compute osimage - aarch64
+      ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_aarch64 }} synclists={{ synclists_dest_path_aarch64 }}"
+      changed_when: true

@@ -41,12 +41,31 @@
       when:
         - switch_status | default(false)
 
-    - name: Create xcat osimage
+    - name: Create xcat osimage - x86_64
       ansible.builtin.include_tasks: create_osimage.yml
+      when: x86_64_iso_status
+      vars:
+        iso_file_path: "{{ x86_64_iso_file_path }}"
+        architecture: "x86_64"
 
-    - name: Fetch osimage name
+    - name: Create xcat osimage - aarch64
+      ansible.builtin.include_tasks: create_osimage.yml
+      when: aarch64_iso_status
+      vars:
+        iso_file_path: "{{ aarch64_iso_file_path }}"
+        architecture: "aarch64"
+
+    - name: Fetch osimage name - x86_64
       ansible.builtin.include_tasks: fetch_osimage.yml
-      when: not nfs_used
+      vars:
+        architecture: "x86_64"
+      when: not nfs_used and x86_64_iso_status
+
+    - name: Fetch osimage name - aarch64
+      ansible.builtin.include_tasks: fetch_osimage.yml
+      vars:
+        architecture: "aarch64"
+      when: not nfs_used and aarch64_iso_status
 
     - name: Configure xCAT on {{ provision_os }}
       ansible.builtin.include_tasks: "{{ role_path }}/../{{ provision_os }}/tasks/main.yml"
