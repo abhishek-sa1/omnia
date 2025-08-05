@@ -1,4 +1,4 @@
-# Copyright 2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+# Copyright 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,13 @@
 # limitations under the License.
 ---
 
-- name: Check if telemetry support is required
-  when: hostvars['127.0.0.1']['kube_prometheus_support']
-  block:
-    - name: Install kube prometheus stack
-      ansible.builtin.include_tasks: install_kube_prometheus.yml
+- name: Check if Service Node has internet
+  ansible.builtin.command: ping -c 1 8.8.8.8
+  register: ping_result
+  changed_when: false
+  ignore_errors: true
+
+- name: Fail if Service Cluster does not have internet
+  ansible.builtin.fail:
+    msg: "{{ service_cluster_no_internet }}"
+  when: ping_result.rc != 0
