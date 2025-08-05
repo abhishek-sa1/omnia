@@ -43,6 +43,7 @@ inventory_file_path_list:
   - "{{ inventory_directory_path }}/{{ compute_gpu_nvidia_filename }}"
   - "{{ inventory_directory_path }}/{{ compute_gpu_intel_filename }}"
   - "{{ inventory_directory_path }}/{{ compute_hostname_ip_filename }}"
+  - "{{ inventory_directory_path }}/{{ compute_cpu_nvidia_filename }}"
 
 # Permissions
 inventory_dir_mode: "644"
