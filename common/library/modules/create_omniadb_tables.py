@@ -23,7 +23,7 @@ from cryptography.fernet import Fernet
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.discovery import omniadb_connection
 
-def create_db():
+def create_db(postgres_path):
     """
     Create a database connection to the PostgreSQL database.
 
@@ -38,11 +38,11 @@ def create_db():
         None
     """
 
-    with open("/opt/omnia/.postgres/.postgres_pass.key", "rb") as passfile:
+    with open(f"{postgres_path}/.postgres_pass.key", "rb") as passfile:
         key = passfile.read()
     fernet = Fernet(key)
 
-    with open("/opt/omnia/.postgres/.encrypted_pwd", "rb") as datafile:
+    with open(f"{postgres_path}/.encrypted_pwd", "rb") as datafile:
         encrypted_file_data = datafile.read()
     decrypted_pwd = fernet.decrypt(encrypted_file_data).decode()
     conn = None
@@ -150,11 +150,21 @@ def main():
 		- None
 	"""
 
-    create_db()
+    module_args = {
+        'postgres_path': {'type': 'str', 'required': True}
+    }
+    module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
+
+    postgres_path = module.params['postgres_path']
+
+    create_db(postgres_path)
+
     conn = omniadb_connection.create_connection()
     create_db_schema(conn)
     create_db_table(conn)
     conn.close()
+
+    module.exit_json(changed=True, msg="DB changes are done")
 
 if __name__ == '__main__':
     main()

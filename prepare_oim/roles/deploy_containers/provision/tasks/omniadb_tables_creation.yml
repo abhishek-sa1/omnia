@@ -21,4 +21,5 @@
 
 - name: Create omniadb database
   create_omniadb_tables:
+    path: "{{ db_path }}"
   register: create_omniadb
