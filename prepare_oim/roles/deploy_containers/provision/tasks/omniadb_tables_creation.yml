@@ -13,12 +13,6 @@
 # limitations under the License.
 ---
 
-# - name: Create omniadb database
-#   ansible.builtin.command: |
-#      {{ python_version }} {{ postgres_utility_path }} {{ db_path }}
-#   register: postgres_status
-#   changed_when: false
-
 - name: Create omniadb database
   create_omniadb_tables:
     postgres_path: "{{ postgres_path }}"
