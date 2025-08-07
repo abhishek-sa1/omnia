@@ -183,7 +183,7 @@
               ansible.builtin.set_fact:
                 cuda_config_aarch64_status: true
               when: check_nvidia_cuda_aarch64.stat.exists
-        
+
         - name: Set cuda_config_status to true
           ansible.builtin.set_fact:
             cuda_config_status: true
