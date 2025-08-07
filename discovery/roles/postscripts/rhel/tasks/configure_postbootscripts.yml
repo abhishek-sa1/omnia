@@ -18,7 +18,6 @@
     sn_oim_group_list: >-
       {{
         [ 'oim_ha_node' if omnia_oim_status | bool else '',
-          'service_node' if service_node_status | bool else '' ]
         | select('!=', '') | list
       }}
 
@@ -58,14 +57,6 @@
   with_items: "{{ pcs_postbootscript_path }}"
   when: enable_oim_ha
 
-- name: Copy service node postboot script to postscripts
-  ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    mode: "{{ item.mode }}"
-  with_items: "{{ service_node_postbootscript_path }}"
-  when: service_role_required
-
 - name: Copy k8s service cluster postboot script to postscripts
   ansible.builtin.template:
     src: "{{ item.src }}"
@@ -86,11 +77,6 @@
   ansible.builtin.command: "{{ xcat_path }}/chdef oim_ha_node -p postbootscripts=\"omnia_oim_ha_node_postboot\""
   changed_when: true
   when: omnia_oim_status
-
-- name: Configure service node postboot script to postscripts
-  ansible.builtin.command: "{{ xcat_path }}/chdef service_node -p postbootscripts=\"omnia_service_node_postboot\""
-  changed_when: true
-  when: service_node_status
 
 - name: Configure firewalld setup postbootscripts on service or OIM Ha node
   ansible.builtin.command: "{{ xcat_path }}/chdef {{ service_oim_groups }} -p postbootscripts=\"omnia_allow_firewall_ports\""

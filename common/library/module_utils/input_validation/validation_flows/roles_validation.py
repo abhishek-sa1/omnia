@@ -111,7 +111,6 @@ def validate_layer_group_separation(logger, roles):
 
     # Define layer roles
     frontend_roles = {
-        "service_node",
         "login_node",
         "auth_server",
         "compiler_node",
@@ -189,24 +188,6 @@ def validate_group_role_separation(logger, roles):
                     errors.append(create_error_msg("Roles", group_str, msg))
 
     return errors
-
-# Below function will be used to validate service_node entry in roles_config ()
-def validate_service_node_in_software_config(input_file_path):
-    """
-    verifies service_node entry present in sofwate config.json
-
-    Returns:
-        True if service_node entry is present
-        False if no entry
-    """
-
-    # verify service_node  with sofwate config json
-    software_config_file_path = create_file_path(input_file_path, file_names["software_config"])
-    software_config_json = json.load(open(software_config_file_path, "r"))
-    softwares = software_config_json["softwares"]
-    if validation_utils.contains_software(softwares, "service_node"):
-        return True
-    return False
 
 # Below function will be used to validate service_k8s entry in software_config
 def validate_service_k8s_in_software_config(input_file_path):
@@ -409,7 +390,6 @@ def validate_roles_config(
     empty_parent_roles = {
         "login_node",
         "compiler_node",
-        "service_node",
         'service_kube_control_plane',
         'service_kube_node',
         'service_etcd',
@@ -528,28 +508,6 @@ def validate_roles_config(
         "service_kube_control_plane", "service_etcd", "service_kube_node",
         "kube_control_plane", "etcd", "kube_node"
     }
-    # Fail if Role Service_node is defined in roles_config.yml,
-    # it is not supported now, for future use
-    service_role_defined = False
-    if validation_utils.key_value_exists(roles, name, "service_node"):
-        # service_role_defined = True
-        errors.append(create_error_msg("roles_config.yml", None, \
-                                        en_us_validation_msg.SERVICE_NODE_ENTRY_INVALID_ROLES_CONFIG_MSG))
-        if service_role_defined:
-            try:
-                if not validate_service_node_in_software_config(input_file_path):
-                    errors.append(
-                        create_error_msg(
-                            "software_config.json",
-                            None,
-                            en_us_validation_msg.SERVICE_NODE_ENTRY_MISSING_ROLES_CONFIG_MSG
-                        )
-                    )
-            except Exception as e:
-                errors.append(
-                    create_error_msg("software_config.json",
-                                    None,
-                                    f"An error occurred while validating software_config.json: {str(e)}"))
 
     # Role service_kube_control_plane is defined in roles_config.yml,
     # verify service_k8s package entry is present in software_config.json
@@ -636,14 +594,14 @@ def validate_roles_config(
                     if role[name] in empty_parent_roles and not validation_utils.is_string_empty(
                         groups[group].get(parent, None)
                     ):
-                        # If parent is not empty and group is associated with login,
-                        #  compiler_node, service_node, kube_control_plane,
+                        # If parent is not empty and group is associated with login_node,
+                        #  compiler_node, kube_control_plane,
                         # or slurm_control_plane
                         errors.append(
                             create_error_msg(
                                 group,
                                 f"Group {group} should not have parent defined.",
-                                en_us_validation_msg.PARENT_SERVICE_NODE_MSG
+                                en_us_validation_msg.PARENT_SERVICE_ROLE_MSG
                             )
                         )
                     if not service_kube_control_plane_defined and (

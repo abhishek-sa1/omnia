@@ -18,7 +18,7 @@ empty_inventory_fail_msg: "Failed. inventory not provided. Re-run playbook with 
 host_mapping_inventory:
   dest: '/opt/omnia/tmp/host_mapping_inventory'
   mode: '0644'
-filter_groups: ['localhost', 'oim', 'omnia_provision', 'service_nodes']
+filter_groups: ['localhost', 'oim', 'omnia_provision']
 
 # Usage: service_tag_mapping.yml
 python: "{{ ansible_python_interpreter }}"

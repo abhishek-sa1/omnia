@@ -35,8 +35,8 @@ USER_JSON_FILE_DEFAULT = ""
 DEFAULT_STATUS_FILENAME = "status.csv"
 STATUS_CSV_HEADER = 'name,type,status\n'
 SOFTWARE_CSV_HEADER = "name,status"
-USER_REG_CRED_INPUT = "/opt/omnia/input/project_default/user_registry_credential.yml"
-USER_REG_KEY_PATH = "/opt/omnia/input/project_default/.local_repo_credentials_key"
+USER_REG_CRED_INPUT = "/opt/omnia/input/project_aarch/user_registry_credential.yml"
+USER_REG_KEY_PATH = "/opt/omnia/input/project_aarch/.local_repo_credentials_key"
 # ----------------------------
 # Software tasklist Defaults
 # Used by prepare_tasklist.py
@@ -113,8 +113,8 @@ pulp_container_commands = {
     "update_container_remote_auth": "pulp container remote update --name %s --url %s --upstream-name %s --policy %s --include-tags '[\"%s\"]' --username %s --password '%s'"
 
 }
-OMNIA_CREDENTIALS_YAML_PATH = "/opt/omnia/input/project_default/omnia_config_credentials.yml"
-OMNIA_CREDENTIALS_VAULT_PATH = "/opt/omnia/input/project_default/.omnia_config_credentials_key"
+OMNIA_CREDENTIALS_YAML_PATH = "/opt/omnia/input/project_aarch/omnia_config_credentials.yml"
+OMNIA_CREDENTIALS_VAULT_PATH = "/opt/omnia/input/project_aarch/.omnia_config_credentials_key"
 # ----------------------------
 # Used by process_rpm_config.py
 # ----------------------------

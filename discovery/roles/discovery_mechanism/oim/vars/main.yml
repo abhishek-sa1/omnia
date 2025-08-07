@@ -51,8 +51,9 @@ unreachable_bmc_msg: |
 invalid_bmc_warning_msg: |
   [WARNING] Some BMC IPs could not be added to the CSV file. Kindly address the issues mentioned above and
   run the update_bmc_group_data.yml utility to add IPs in bmc_group_data.csv.
-# Usage: service_node_postgres_setting.yml
-no_service_node_msg: "[Warning] No new service nodes discovered, skipping service node configurations."
+
+# Usage: passive_oim_postgres_setting.yml
+db_passive_oim_fail_msg: "No passive OIM nodes found in the database."
 waiting_time_10: 10
 pg_hba_conf_path: /var/lib/pgsql/data/pg_hba.conf
 provision_shared_path: /opt/omnia/provision/
@@ -66,6 +67,3 @@ nfs_corosync_conf:
   template: "corosync.conf.j2"
   dest: "{{ omnia_nfs_share }}/pcs/corosync/corosync.conf"
   mode: "{{ read_write_mode }}"
-
-# Usage: passive_oim_postgres_setting.yml
-db_passive_oim_fail_msg: "No passive OIM nodes found in the database."

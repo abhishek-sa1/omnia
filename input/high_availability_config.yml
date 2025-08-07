@@ -43,32 +43,6 @@ oim_ha:
   passive_nodes:
     - node_service_tags: [] # List of service tags, separated by commas. e.g. ["ABC","DEF"]
 
-
-# ***********************************************************************
-# High Availability (HA) Configuration for Service Nodes
-# - enable_service_ha: <Mandatory> Indicates whether to enable HA for service nodes. Set to 'true' to enable, 'false' to disable.
-# - service_nodes:
-#   - virtual_ip_address: <Mandatory if enable_service_ha is true> The virtual IP address for the service node HA setup.
-#   - active_node_service_tag: <Mandatory if enable_service_ha is true> The service tag of the active node within this service node HA group.
-#   - passive_nodes:
-#     - node_service_tags: <Mandatory if enable_service_ha is true> List of service tags for passive nodes for this active
-#       service node. Separate tags with commas.
-# ***********************************************************************
-#
-# ----------------------------------------- Service Node Not Supported ( Future Use ) -----------------------------------------
-service_node_ha:
-  enable_service_ha: false
-  service_nodes:
-    - virtual_ip_address: ""
-      active_node_service_tag: ""
-      passive_nodes:
-        - node_service_tags: [] # List of service tags, separated by commas. e.g. ["ABC","DEF"]
-
-    - virtual_ip_address: ""
-      active_node_service_tag: ""
-      passive_nodes:
-        - node_service_tags: [] # List of service tags, separated by commas. e.g. ["ABC","DEF"]
-
 # ***********************************************************************
 # High Availability (HA) Configuration for SLURM Head Node
 # - enable_slurm_ha: <Mandatory> Indicates whether to enable HA for the SLURM head node. Set to 'true' to enable, 'false' to disable.

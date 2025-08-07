@@ -40,6 +40,5 @@
 
 - name: Call node update for BMC
   ansible.builtin.command: |
-     {{ python_version }} {{ update_node_obj_path }} {{ provision_os_image_x86_64 }} {{ service_os_image }} {{ mtms_db_path }} {{ admin_nic_ip }}
-     {{ provision_os_image_aarch64 }}
+     {{ python_version }} {{ update_node_obj_path }} {{ provision_os_image_x86_64 }} {{ provision_os_image_aarch64 }} {{ mtms_db_path }} {{ admin_nic_ip }}
   changed_when: false

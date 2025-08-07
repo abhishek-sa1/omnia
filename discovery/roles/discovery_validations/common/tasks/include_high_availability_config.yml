@@ -42,11 +42,3 @@
   ansible.builtin.set_fact:
     oim_ha_data: "{{ high_availability_config | default({}) | combine({item.key: item.value}) }}"
   with_dict: "{{ oim_ha }}"
-
-- name: Set service_node_ha_status
-  ansible.builtin.set_fact:
-    enable_service_ha: "{{ high_availability_config.ansible_facts.service_node_ha.enable_service_ha | default(false) }}"
-
-- name: Parse service_node_ha_data
-  ansible.builtin.set_fact:
-    service_node_ha_data: "{{ high_availability_config.ansible_facts.service_node_ha | default({}) }}"

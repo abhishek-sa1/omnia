@@ -44,7 +44,7 @@ def get_hosts_from_group(file_path, group_name, module):
     # Return list of hosts under the group
     return list(config[group_name].keys())
 
-def fetch_valid_parent_tags(file_path, service_node_metadata, module):
+def fetch_valid_parent_tags(file_path, service_cluster_metadata, module):
     """
     This function fetches the parent tags from a given CSV file.
 
@@ -61,28 +61,28 @@ def fetch_valid_parent_tags(file_path, service_node_metadata, module):
         for row in reader:
             parent = row.get('PARENT', '').strip()
             if parent:
-                if parent not in service_node_metadata:
+                if parent not in service_cluster_metadata:
                     module.warn(f"Parent tag '{parent}' not found in service node metadata.")
                     invalid_tags.add(parent)
                     continue
                 parent_tags.add(parent)
     return parent_tags, invalid_tags
 
-def fetch_active_passive_servicetags(parent_tags, service_node_metadata):
+def fetch_active_passive_servicetags(parent_tags, service_cluster_metadata):
     """
     Fetches the active and passive service tags based
     on the provided parent tags and service node metadata.
 
     Parameters:
         parent_tags (list): A list of parent tags used to identify service nodes.
-        service_node_metadata (dict): A dictionary containing metadata about service nodes.
+        service_cluster_metadata (dict): A dictionary containing metadata about service nodes.
 
     Returns:
         tuple: A tuple containing two sets. The first set contains active service tags.
                The second set contains passive service tags.
     """
     svc_node_info = {}
-    for service_tag, data in service_node_metadata.items():
+    for service_tag, data in service_cluster_metadata.items():
         node_info = {}
         if service_tag in parent_tags:
             active_service_tag = data.get('active_service_tag', service_tag)
@@ -97,8 +97,8 @@ def fetch_active_passive_servicetags(parent_tags, service_node_metadata):
                     if passive_tag not in svc_node_info:
                         svc_node_info[passive_tag] = {
                             'active_service_tag': active_service_tag,
-                            'active_ip': service_node_metadata[passive_tag]['virtual_ip_address'],
-                            'admin_ip': service_node_metadata[passive_tag]['admin_ip']
+                            'active_ip': service_cluster_metadata[passive_tag]['virtual_ip_address'],
+                            'admin_ip': service_cluster_metadata[passive_tag]['admin_ip']
                         }
 
     return svc_node_info
@@ -107,25 +107,24 @@ def main():
     """Main module function."""
     module_args = {
         'bmc_group_data_path': {'type': "str", 'required': True},
-        'service_node_metadata': {'type': "dict", 'required': True},
+        'service_cluster_metadata': {'type': "dict", 'required': True},
         'inventory_file_path': {'type': "str", 'required': False},
     }
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
     bmc_group_data_path = module.params["bmc_group_data_path"]
-    service_node_metadata = module.params["service_node_metadata"]
+    service_cluster_metadata = module.params["service_cluster_metadata"]
     inventory_file_path = module.params.get("inventory_file_path", "")
     try:
         parent_tags, invalid_tags = fetch_valid_parent_tags(bmc_group_data_path,
-                                                            service_node_metadata, module)
+                                                            service_cluster_metadata, module)
         if invalid_tags:
             module.exit_json(
                 changed=False,
                 msg=f"Invalid parent tags found: {', '.join(invalid_tags)}.",
                 invalid_parent_tags=list(invalid_tags)
             )
-        # sn_admin_ip, sn_active_ip = fetch_admin_ip(parent_tags, service_node_metadata)
-        svc_node_info = fetch_active_passive_servicetags(parent_tags, service_node_metadata)
+        svc_node_info = fetch_active_passive_servicetags(parent_tags, service_cluster_metadata)
         oim_ha_nodes = get_hosts_from_group(inventory_file_path, 'oim_ha_node', module)
         module.exit_json(changed=False, sn_node_info=svc_node_info,
                          oim_ha_hosts=oim_ha_nodes)

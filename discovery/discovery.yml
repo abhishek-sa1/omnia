@@ -87,34 +87,14 @@
       ansible.builtin.include_role:
         name: discovery_mechanism/oim     # noqa: role-name[path]
 
-    - name: Generate service node configuration
-      ansible.builtin.include_role:
-        name: service_node_config      # noqa: role-name[path]
-      when: (discovered_service_nodes | default([])) | length > 0
-
-- name: Update corosync config in PCS container
-  hosts: oim
-  connection: ssh
-  tags: management_layer
-  gather_facts: false
-  tasks:
     - name: Update corosync config
       when: hostvars['omnia_provision']['enable_oim_ha'] | default(false)
       ansible.builtin.include_role:
         name: discovery_mechanism/oim     # noqa: role-name[path]
         tasks_from: update_corosync_config.yml
 
-- name: Discovery from service nodes
-  hosts: service_nodes
-  connection: ssh
-  tasks:
-    - name: Discover all nodes
-      ansible.builtin.include_role:
-        name: discovery_mechanism/service     # noqa: role-name[path]
-      when: hostvars['omnia_provision']['hierarchical_provision_status'] | default(false)
-
 - name: Set facts for kernel parameters update
-  hosts: all:!localhost:!omnia_provision:!service_nodes:!oim
+  hosts: all:!localhost:!omnia_provision:!oim
   connection: local
   gather_facts: true
   vars_files:
@@ -135,29 +115,12 @@
         name: os_update                   # noqa: role-name[path]
         tasks_from: update_kernel_parameters.yml
 
-- name: Configure postscripts
+- name: Configure postscripts, osimage and monitor thread
   hosts: omnia_provision
   connection: ssh
   tags: management_layer
   roles:
     - role: postscripts/common             # noqa: role-name[path]
-
-- name: Copying syncfiles for discovery from service nodes
-  hosts: service_nodes
-  connection: ssh
-  tasks:
-    - name: Discover all nodes
-      ansible.builtin.include_role:
-        name: discovery_mechanism/service     # noqa: role-name[path]
-        tasks_from: copy_syncfiles.yml
-      when:
-        - hostvars['omnia_provision']['hierarchical_provision_status'] | default(false)
-
-- name: Configure os image and monitor service
-  hosts: omnia_provision
-  connection: ssh
-  tags: management_layer
-  roles:
     - role: configure_os_image/common      # noqa: role-name[path]
     - role: monitor_thread
 

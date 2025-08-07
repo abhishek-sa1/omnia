@@ -13,7 +13,7 @@
 #  limitations under the License.
 ---
 
-- name: Add iDRAC-telemetry related ports on service_nodes firewalld
+- name: Add iDRAC-telemetry related ports on host firewalld
   ansible.posix.firewalld:
     port: "{{ item }}"
     state: enabled

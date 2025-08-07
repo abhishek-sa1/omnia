@@ -31,7 +31,7 @@
 #                         - Set the value only for group of nodes belonging to kube_node and slurm_node roles,
 #                         - And empty for other roles.
 #     parent:             - <Conditional Mandatory> list of service tag of associated active service node(s).
-#                         - This field will be empty for group of nodes which is associated with ‘login_node’, ‘compiler_node’, ‘service_node’,
+#                         - This field will be empty for group of nodes which is associated with ‘login_node’, ‘compiler_node’,
 #                         - ‘auth_server’, ‘service_kube_control_plane’, 'service_etcd', ‘kube_control_plane’, ‘etcd’, 'slurm_control_node’.
 #                         - If ‘service’ role is not defined, then value will be empty for worker and default role.
 #     bmc_details:        - <Conditional Mandatory> BMC IP static range in the format 10.5.0.1-10.5.0.200
@@ -87,7 +87,6 @@ Groups:
 # | service_kube_control_plane | management      |     | kube_node         | compute        |
 # | service_etcd               | management      |     | slurm_node        | compute        |
 # | service_kube_node          | management      |     |                   |                |
-# | service_node (future use)  | management      |     |                   |                |
 # | login_node                 | management      |     |                   |                |
 # | auth_server                | management      |     |                   |                |
 # | compiler_node              | management      |     |                   |                |
@@ -180,22 +179,6 @@ Roles:
 #
 # Service k8s Worker Role: Service Cluster Kubernetes worker node groups to add into service cluster k8s role can be provided in this role
   # - name: "service_kube_node"
-  #   groups:
-  #     - grp0
-  #     - grp1
-
-# ----------------------------------------Not Supported ( Future Use )---------------------------------
-# Service Node Role: Service node groups to add into service_node role can be provided in this role
-# ------------------------------------------------------------------------------------
-#
-# This role is used to configure the nodes for service group. It belongs to the management layer.
-#
-# The nodes included in this role will have the necessary tools and
-# configurations to configure service node.
-#
-# The nodes in this role can be used to run service.
-#
-  # - name: "service_node"
   #   groups:
   #     - grp0
   #     - grp1

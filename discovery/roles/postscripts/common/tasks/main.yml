@@ -20,7 +20,7 @@
 
 - name: Include vars from the pcs container
   ansible.builtin.include_vars: "{{ pcs_vars }}"
-  when: enable_oim_ha or service_role_required
+  when: enable_oim_ha
 
 - name: Include telemetry role vars
   ansible.builtin.include_vars: "{{ item }}"
@@ -46,9 +46,6 @@
     - name: Check omnia_oim group status
       ansible.builtin.include_tasks: check_nodes_oim_ha.yml
 
-    - name: Check service_node group status
-      ansible.builtin.include_tasks: check_nodes_service.yml
-
     - name: Configuration of postbootscripts
       ansible.builtin.include_tasks: "{{ role_path }}/../{{ provision_os }}/tasks/configure_postbootscripts.yml"
       when: all_node_status
@@ -60,10 +57,6 @@
     - name: Configuration of postscripts
       ansible.builtin.include_tasks: configure_postscripts.yml
       when: all_node_status
-
-    - name: Configuration of service_node role postscripts
-      ansible.builtin.include_tasks: configure_postscripts_service.yml
-      when: service_node_status
 
     - name: Configuration of additional sowftware packages postscripts
       ansible.builtin.include_tasks: configure_postscripts_additional_softwares.yml

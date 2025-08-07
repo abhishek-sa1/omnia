@@ -17,7 +17,7 @@
   ansible.builtin.set_fact:
     omnia_oim_status: false
 
-- name: Fetch nodes with group service_node
+- name: Fetch nodes with group oim_ha_node
   when: oim_ha_role_required | default(false)
   block:
     - name: Fetch nodes with group oim_ha_node
