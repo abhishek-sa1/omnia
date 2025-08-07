@@ -18,6 +18,7 @@ import os
 import re
 from datetime import datetime
 from prettytable import PrettyTable
+from collections import defaultdict
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.local_repo.process_parallel import execute_parallel, log_table_output
 from ansible.module_utils.local_repo.download_common import (
@@ -111,7 +112,7 @@ def update_status_csv(csv_dir, software, overall_status):
         f.write("\n".join(final_lines))
 
 
-def determine_function(task, repo_store_path, csv_file_path, user_data, version_variables, user_registries, docker_username, docker_password):
+def determine_function(task, repo_store_path, csv_file_path, user_data, version_variables, arc, user_registries, docker_username, docker_password):
     """
     Determines the appropriate function and its arguments to process a given task.
 
@@ -121,6 +122,7 @@ def determine_function(task, repo_store_path, csv_file_path, user_data, version_
         csv_file_path (str): The path to the CSV file.
         user_data (dict): A dictionary containing user data.
         version_variables (dict): A dictionary containing version variables.
+        arc (str): Architecture of package to be downloaded
 
     Returns:
         tuple: A tuple containing the function to process the task and its arguments.
@@ -163,7 +165,7 @@ def determine_function(task, repo_store_path, csv_file_path, user_data, version_
             return process_image, [task, status_file, version_variables, user_registries, docker_username, docker_password]
         if task_type == "rpm":
             return process_rpm, [task, repo_store_path, status_file,
-                                 cluster_os_type, cluster_os_version, repo_config_value]
+                                 cluster_os_type, cluster_os_version, repo_config_value, arc]
 
         raise ValueError(f"Unknown task type: {task_type}")
     except Exception as e:
@@ -190,11 +192,33 @@ def generate_pretty_table(task_results, total_duration, overall_status):
     return table.get_string()
 
 def generate_software_status_table(status_dict):
-    table = PrettyTable()
-    table.field_names = ["Name", "Status"]
-    for name, status in status_dict.items():
-        table.add_row([name, str(status).lower()])
-    return table.get_string()
+    """
+    Returns status tables of software grouped by architecture.
+
+    Args:
+        status_dict (dict): Software info with 'arch' and 'overall_status' for each entry.
+
+    Returns:
+        str: Formatted tables (per arch) showing software name and status.
+    """
+    # Group entries by arch
+    grouped = defaultdict(list)
+    for name, info in status_dict.items():
+        arch = info.get("arch", "unknown")
+        status = info.get("overall_status", "unknown")
+        grouped[arch].append((name, status))
+
+    # Build tables for each arch
+    tables = []
+    for arch, items in grouped.items():
+        table = PrettyTable()
+        table.title = f"{arch} Software Stack Download Overview"
+        table.field_names = ["Name", "Status"]
+        for name, status in items:
+            table.add_row([name, status.lower()])
+        tables.append(table.get_string())
+
+    return "\n\n".join(tables)
 
 def main():
     """
@@ -233,7 +257,8 @@ def main():
         "user_json_file": {"type": "str", "required": False, "default": USER_JSON_FILE_DEFAULT},
         "show_softwares_status": {"type": "bool", "required": False, "default": False},
         "overall_status_dict": {"type": "dict", "required": False, "default": {}},
-        "local_repo_config_path": {"type": "str", "required": False, "default": LOCAL_REPO_CONFIG_PATH_DEFAULT}
+        "local_repo_config_path": {"type": "str", "required": False, "default": LOCAL_REPO_CONFIG_PATH_DEFAULT},
+        "arch": {"type": "str", "required": False}
     }
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
     tasks = module.params["tasks"]
@@ -249,7 +274,7 @@ def main():
     show_softwares_status = module.params["show_softwares_status"]
     overall_status_dict = module.params['overall_status_dict']
     local_repo_config_path = module.params["local_repo_config_path"]
-
+    arc= module.params["arch"]
     # Initialize standard logger.
     slogger = setup_standard_logger(slog_file)
     result = {"changed": False, "task_results": []}
@@ -286,7 +311,7 @@ def main():
 
         overall_status, task_results = execute_parallel(
             tasks, determine_function, nthreads, repo_store_path, csv_file_path,
-            log_dir, user_data, version_variables, slogger, local_repo_config_path, timeout
+            log_dir, user_data, version_variables, arc, slogger, local_repo_config_path, timeout
         )
 
         if not is_encrypted(USER_REG_CRED_INPUT):
@@ -307,6 +332,7 @@ def main():
         result["total_duration"] = total_duration
         result["task_results"] = task_results
         result["table_output"] = table_output
+        result["arch"] = arc
 
         update_status_csv(csv_file_path, software, overall_status)
 
