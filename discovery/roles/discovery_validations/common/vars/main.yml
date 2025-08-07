@@ -253,14 +253,18 @@ dynamically generated based on the group used by omnia, contribute to the total 
 The maximum length for the node name is 13 characters. Please set the domain name carefully to avoid any issues."
 
 # Usage: validate_ofed_cuda_repo.yml
-ofed_version_warning_msg: "[WARNING] software_config.json does not have the version for OFED.
-Hence OFED will not be installed on the nodes post provisioning."
-ofed_repo_warning_msg: "[WARNING] local_repo.yml is not executed for downloading OFED packages.
-OFED will not be installed on the nodes post provisioning."
-cuda_version_warning_msg: "[WARNING] software_config.json does not have the version for CUDA.
-Hence CUDA will not be installed on the nodes post provisioning."
-cuda_repo_warning_msg: "[WARNING] local_repo.yml is not executed for downloading CUDA packages.
-CUDA will not be installed on the nodes post provisioning."
+ofed_version_warning_msg: |
+  "[WARNING] software_config.json does not have the version for OFED.
+  Hence OFED will not be installed on the nodes post provisioning."
+ofed_repo_warning_msg: |
+  "[WARNING] OFED installation will be skipped due to incomplete local_repo.yml
+  execution for x86_64 and/or aarch64 architectures."
+cuda_version_warning_msg: |
+  "[WARNING] software_config.json does not have the version for CUDA.
+  Hence CUDA will not be installed on the nodes post provisioning."
+cuda_repo_warning_msg: |
+  "[WARNING] CUDA installation will be skipped due to incomplete local_repo.yml
+  execution for x86_64 and/or aarch64 architectures."
 offline_iso_directory: "/opt/omnia/offline_repo/cluster/{{ provision_os }}/{{ provision_os_version }}/iso"
 
 # Usage: validate_amdgpu_rocm_repo.yml

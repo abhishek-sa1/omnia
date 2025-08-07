@@ -1,4 +1,4 @@
-# Copyright 2024 Dell Inc. or its subsidiaries. All Rights Reserved.
+# Copyright 2025 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -13,12 +13,16 @@
 #  limitations under the License.
 ---
 
-- name: Set default ofed_config_status and cuda_config_status
+- name: Set default ofed_config_status and cuda_config_status for x86_64 and aarch64
   ansible.builtin.set_fact:
     ofed_input_status: false
     cuda_input_status: false
     ofed_config_status: false
     cuda_config_status: false
+    ofed_config_x86_64_status: false
+    cuda_config_x86_64_status: false
+    ofed_config_aarch64_status: false
+    cuda_config_aarch64_status: false
 
 - name: Check if ofed_input_status is true
   ansible.builtin.set_fact:
@@ -28,7 +32,7 @@
   ansible.builtin.set_fact:
     cuda_input_status: "{{ user_config.softwares | selectattr('name', 'equalto', 'cuda') | list | length > 0 }}"
 
-- name: Set ofed_config_status
+- name: Set ofed_config_status for x86_64 and aarch64
   when: ofed_input_status
   block:
     - name: Fetch ofed_version
@@ -53,25 +57,53 @@
             patterns: "*.iso"
           register: find_ofed_file
 
-        - name: Set mlnx_ofed_path
+        - name: Set mlnx_ofed_path for x86_64 and aarch64
           ansible.builtin.set_fact:
-            mlnx_ofed_path: "{{ find_ofed_file.files[0].path }}"
+            mlnx_ofed_x86_64_path: "{{ find_ofed_file.files | selectattr('path', 'search', 'x86_64') | map(attribute='path') | first }}"
+            mlnx_ofed_aarch64_path: "{{ find_ofed_file.files | selectattr('path', 'search', 'aarch64') | map(attribute='path') | first }}"
 
-        - name: Check mlnx_ofed_path exists or not
-          ansible.builtin.stat:
-            path: "{{ mlnx_ofed_path }}"
-          register: check_mlnx_ofed
+        - name: Check mlnx_ofed_x86_64_path for x86_64
+          when: x86_64_iso_status
+          block:
+            - name: Check mlnx_ofed_x86_64_path exists or not
+              ansible.builtin.stat:
+                path: "{{ mlnx_ofed_x86_64_path }}"
+              register: check_mlnx_ofed_x86_64
 
-        - name: Warning - Please wait, This task will take few seconds
-          ansible.builtin.pause:
-            seconds: "{{ warning_wait_time }}"
-            prompt: "{{ ofed_repo_warning_msg }}"
-          when: not check_mlnx_ofed.stat.exists
+            - name: Warning - Please wait, This task will take few seconds - x86_64
+              ansible.builtin.pause:
+                seconds: "{{ warning_wait_time }}"
+                prompt: "{{ ofed_repo_warning_msg }}"
+              when: not check_mlnx_ofed_x86_64.stat.exists
+
+            - name: Set ofed_config_x86_64_status to true
+              ansible.builtin.set_fact:
+                ofed_config_x86_64_status: true
+              when: check_mlnx_ofed_x86_64.stat.exists
+
+        - name: Check mlnx_ofed_aarch64_path for aarch64
+          when: aarch64_iso_status
+          block:
+            - name: Check mlnx_ofed_aarch64_path exists or not
+              ansible.builtin.stat:
+                path: "{{ mlnx_ofed_aarch64_path }}"
+              register: check_mlnx_ofed_aarch64
+
+            - name: Warning - Please wait, This task will take few seconds - aarch64
+              ansible.builtin.pause:
+                seconds: "{{ warning_wait_time }}"
+                prompt: "{{ ofed_repo_warning_msg }}"
+              when: not check_mlnx_ofed_aarch64.stat.exists
+
+            - name: Set ofed_config_aarch64_status to true
+              ansible.builtin.set_fact:
+                ofed_config_aarch64_status: true
+              when: check_mlnx_ofed_x86_64.stat.exists
 
         - name: Set ofed_config_status to true
           ansible.builtin.set_fact:
             ofed_config_status: true
-          when: check_mlnx_ofed.stat.exists
+          when: ofed_config_x86_64_status or ofed_config_aarch64_status
 
     - name: Warning - Please wait, This task will take few seconds
       ansible.builtin.pause:
@@ -84,7 +116,7 @@
         seconds: "{{ warning_wait_time }}"
         prompt: "{{ ofed_version_warning_msg }}"
 
-- name: Set cuda_config_status
+- name: Set cuda_config_status for x86_64 and aarch64
   when: cuda_input_status
   block:
     - name: Fetch cuda_version
@@ -109,25 +141,53 @@
             patterns: "{{ cuda_search_pattern }}"
           register: find_cuda_file
 
-        - name: Set cuda_toolkit_path
+        - name: Set cuda_toolkit_path for x86_64 and aarch64
           ansible.builtin.set_fact:
-            cuda_toolkit_path: "{{ find_cuda_file.files[0].path }}"
+            cuda_toolkit_x86_64_path: "{{ find_cuda_file.files | selectattr('path', 'search', 'x86_64') | map(attribute='path') | first }}"
+            cuda_toolkit_aarch64_path: "{{ find_cuda_file.files | selectattr('path', 'search', 'aarch64') | map(attribute='path') | first }}"
 
-        - name: Check cuda_toolkit_path exists or not
-          ansible.builtin.stat:
-            path: "{{ cuda_toolkit_path }}"
-          register: check_nvidia_cuda
+        - name: Check cuda_toolkit_x86_64_path for x86_64
+          when: x86_64_iso_status
+          block:
+            - name: Check cuda_toolkit_x86_64_path exists or not
+              ansible.builtin.stat:
+                path: "{{ cuda_toolkit_x86_64_path }}"
+              register: check_nvidia_cuda_x86_64
 
-        - name: Warning - Please wait, This task will take few seconds
-          ansible.builtin.pause:
-            seconds: "{{ warning_wait_time }}"
-            prompt: "{{ cuda_repo_warning_msg }}"
-          when: not check_nvidia_cuda.stat.exists
+            - name: Warning - Please wait, This task will take few seconds - x86_64
+              ansible.builtin.pause:
+                seconds: "{{ warning_wait_time }}"
+                prompt: "{{ cuda_repo_warning_msg }}"
+              when: not check_nvidia_cuda_x86_64.stat.exists
 
+            - name: Set cuda_config_x86_64_status to true
+              ansible.builtin.set_fact:
+                cuda_config_x86_64_status: true
+              when: check_nvidia_cuda_x86_64.stat.exists
+
+        - name: Check cuda_toolkit_aarch64_path for aarch64
+          when: aarch64_iso_status
+          block:
+            - name: Check cuda_toolkit_aarch64_path exists or not
+              ansible.builtin.stat:
+                path: "{{ cuda_toolkit_aarch64_path }}"
+              register: check_nvidia_cuda_aarch64
+
+            - name: Warning - Please wait, This task will take few seconds - aarch64
+              ansible.builtin.pause:
+                seconds: "{{ warning_wait_time }}"
+                prompt: "{{ cuda_repo_warning_msg }}"
+              when: not check_nvidia_cuda_aarch64.stat.exists
+
+            - name: Set cuda_config_aarch64_status to true
+              ansible.builtin.set_fact:
+                cuda_config_aarch64_status: true
+              when: check_nvidia_cuda_aarch64.stat.exists
+        
         - name: Set cuda_config_status to true
           ansible.builtin.set_fact:
             cuda_config_status: true
-          when: check_nvidia_cuda.stat.exists
+          when: cuda_config_x86_64_status or cuda_config_aarch64_status
 
     - name: Warning - Please wait, This task will take few seconds
       ansible.builtin.pause:

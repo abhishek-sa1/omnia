@@ -24,10 +24,13 @@ repo_permission: "755"
 ofed_permission: "0644"
 
 # Usage: configure_cuda.yml
-cuda_tmp_path: "{{ oim_shared_path }}/tmp/cuda"
-cuda_core_path: /install/cuda/x86_64/cuda-core
-invalid_cuda_rpm_fail_msg: "Failed. Invalid cuda_toolkit_path: {{ cuda_toolkit_path }} provided in provision_config.yml.
-  Make sure cuda rpm file is downloaded completely."
+cuda_tmp_x86_64_path: "{{ oim_shared_path }}/tmp/cuda/x86_64"
+cuda_tmp_aarch64_path: "{{ oim_shared_path }}/tmp/cuda/aarch64"
+cuda_core_x86_64_path: /install/cuda/x86_64/cuda-core
+cuda_core_aarch64_path: /install/cuda/aarch64/cuda-core
+invalid_cuda_rpm_fail_msg: |
+  "Failed. local_repo.yml did not download cuda rpm file correctly.
+  Verify that cuda rpm file is fully downloaded by checking local_repo.yml logs."
 cuda_postscripts_path:
   - { src: "{{ role_path }}/../common/templates/omnia_cuda.j2", dest: "/install/postscripts/omnia_cuda", mode: "755" }
 xcat_path: /opt/xcat/bin
