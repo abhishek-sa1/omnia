@@ -17,10 +17,10 @@
   ansible.builtin.set_fact:
     diskful_osimage_status: false
 
-- name: Check diskful osimage is created
+- name: Check diskful osimage is created - {{ architecture }}
   ansible.builtin.shell: >
     set -o pipefail && \
-    {{ xcat_path }}/lsdef -t osimage | grep "{{ osimage_search_key }}" | grep "{{ provision_os }}" | grep "{{ provision_os_version }}"
+    {{ xcat_path }}/lsdef -t osimage | grep -E "{{ provision_os }}.*{{ provision_os_version }}.*{{ architecture }}.*{{ osimage_search_key }}"
   changed_when: false
   failed_when: false
   register: diskful_osimage_check
@@ -32,22 +32,51 @@
     - provision_os in diskful_osimage_check.stdout
     - provision_os_version in diskful_osimage_check.stdout
 
-- name: Create diskful osimage locally
-  ansible.builtin.command: "{{ xcat_sbin_path }}/copycds {{ iso_file_path }}"
-  changed_when: true
+- name: Create diskful osimage locally - {{ architecture }}
   when: not nfs_used
+  block:
+    - name: Create diskful osimage locally - {{ architecture }}
+      ansible.builtin.command: "{{ xcat_sbin_path }}/copycds {{ iso_file_path }}"
+      changed_when: true
 
-- name: Create diskful osimage on NFS
+    - name: Configure grub file
+      when: architecture == "aarch64"
+      block:
+        - name: Get os arch and os version
+          ansible.builtin.shell: >
+            set -o pipefail && \
+            {{ xcat_sbin_path }}/copycds -i {{ iso_file_path }} | grep -E "ARCH|DISTNAME" | cut -d':' -f2
+          changed_when: false
+          register: osimage_info
+          failed_when: osimage_info.stdout_lines | length != 2
+
+        - name: Set os arch and os dist
+          ansible.builtin.set_fact:
+            os_arch: "{{ osimage_info.stdout_lines[1] }}"
+            os_dist: "{{ osimage_info.stdout_lines[0] }}"
+
+        - name: Set install directory
+          ansible.builtin.set_fact:
+            xcat_install_dir: "{{ xcat_install_dir }}/{{ os_dist }}/{{ os_arch }}"
+
+        - name: Copy grub2 files - aarch64
+          ansible.builtin.copy:
+            src: "{{ xcat_install_dir }}/EFI/BOOT/grubaa64.efi"
+            dest: "{{ tftp_grub2_aarch64_path }}"
+            remote_src: true
+            mode: "{{ grub_mode }}"
+
+- name: Create diskful osimage on NFS - {{ architecture }}
   when: nfs_used
   block:
     - name: Create tmp osimage directory
       ansible.builtin.file:
-        path: "{{ tmp_dir }}"
+        path: "{{ tmp_dir }}/{{ architecture }}"
         state: directory
         mode: "{{ mode }}"
 
-    - name: Create diskful osimage
-      ansible.builtin.command: "{{ xcat_sbin_path }}/copycds -p {{ tmp_dir }} {{ iso_file_path }}"
+    - name: Create diskful osimage on NFS - {{ architecture }}
+      ansible.builtin.command: "{{ xcat_sbin_path }}/copycds -p {{ tmp_dir }}/{{ architecture }} {{ iso_file_path }}"
       changed_when: true
 
     - name: Get os arch and os version
@@ -75,26 +104,41 @@
 
     - name: Copy osimages to xCAT install directory
       ansible.builtin.copy:
-        src: "{{ tmp_dir }}/"
+        src: "{{ tmp_dir }}/{{ architecture }}/"
         dest: "{{ xcat_install_dir }}"
         remote_src: true
         mode: "{{ mode }}"
 
     - name: Delete tmp osimage directory
       ansible.builtin.file:
-        path: "{{ tmp_dir }}"
+        path: "{{ tmp_dir }}/{{ architecture }}"
         state: absent
 
     - name: Fetch osimage names
       ansible.builtin.include_tasks: fetch_osimage.yml
 
-    - name: Modify comput osimages with xCAT install directory
-      ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ provision_os_image }} pkgdir={{ xcat_install_dir }}"
+    - name: Modify compute osimages with xCAT install directory - x86_64
+      ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ provision_os_image_x86_64 }} pkgdir={{ xcat_install_dir }}"
       changed_when: true
+      when: architecture == "x86_64"
+
+    - name: Modify compute osimages with xCAT install directory - aarch64
+      ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ provision_os_image_aarch64 }} pkgdir={{ xcat_install_dir }}"
+      changed_when: true
+      when: architecture == "aarch64"
 
     - name: Modify service osimages with xCAT install directory
       ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ service_os_image }} pkgdir={{ xcat_install_dir }}"
       changed_when: true
+      when: architecture == "x86_64"
+
+    - name: Copy grub2 files - aarch64
+      ansible.builtin.copy:
+        src: "{{ xcat_install_dir }}/EFI/BOOT/grubaa64.efi"
+        dest: "{{ tftp_grub2_aarch64_path }}"
+        remote_src: true
+        mode: "{{ grub_mode }}"
+      when: architecture == "aarch64"
 
   rescue:
     - name: Fail if NFS osimage creation/saving failed

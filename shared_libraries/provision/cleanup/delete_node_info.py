@@ -81,6 +81,7 @@ def delete_node_info_from_inventory_files(inv_file_folder, nodeinfo):
         "compute_gpu_nvidia",
         "compute_cpu_amd",
         "compute_cpu_intel",
+        "compute_cpu_nvidia",
         "compute_gpu_intel",
         "cluster_layout"
     ]

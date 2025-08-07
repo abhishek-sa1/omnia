@@ -57,8 +57,8 @@
             },
             "architecture": {
                 "type": "string",
-                "description": "Architecture of the nodes - x86 or ARM",
-                "enum": ["x86", "ARM"],
+                "description": "Architecture of the nodes - x86_64 or aarch64",
+                "enum": ["x86_64", "aarch64"],
                 "required": ["architecture"]
             }
           },

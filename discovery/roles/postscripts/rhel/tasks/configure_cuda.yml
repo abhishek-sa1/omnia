@@ -89,6 +89,12 @@
     regexp: 'EOF'
     line: 'echo "PATH=$PATH:/opt/dell/srvadmin/sbin:/usr/local/sbin:/usr/local/bin/:/usr/local/cuda/bin" >> /etc/bashrc'
 
-- name: Update osimage with cuda repository
-  ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image }} -p pkgdir={{ cuda_core_path }}"
+- name: Update osimage with cuda repository - x86_64
+  ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_x86_64 }} -p pkgdir={{ cuda_core_path }}"
   changed_when: true
+  when: x86_64_iso_status
+
+- name: Update osimage with cuda repository - aarch64
+  ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_aarch64 }} -p pkgdir={{ cuda_core_path }}"
+  changed_when: true
+  when: aarch64_iso_status

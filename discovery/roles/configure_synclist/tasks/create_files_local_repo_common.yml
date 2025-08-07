@@ -55,9 +55,12 @@
 
 - name: Create repos directory under syncfiles directory
   ansible.builtin.file:
-    path: "{{ syncfiles_share_path }}/repos"
+    path: "{{ item }}"
     state: directory
     mode: "{{ dir_permission }}"
+  with_items:
+    - "{{ repos_share_path_x86_64 }}"
+    - "{{ repos_share_path_aarch64 }}"
 
 - name: Create conf directory under syncfiles directory
   ansible.builtin.file:

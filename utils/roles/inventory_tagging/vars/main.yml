@@ -24,6 +24,7 @@ commentedconfigparser_python_package: "commented-configparser"
 inventory_files:
   - compute_cpu_intel
   - compute_cpu_amd
+  - compute_cpu_nvidia
   - compute_gpu_nvidia
   - compute_gpu_amd
   - compute_gpu_intel
@@ -34,6 +35,7 @@ vendors:
   cpu:
     intel: compute_cpu_intel
     amd: compute_cpu_amd
+    nvidia: compute_cpu_nvidia
   gpu:
     nvidia: compute_gpu_nvidia
     amd: compute_gpu_amd

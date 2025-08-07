@@ -20,7 +20,7 @@ import os
 import ipaddress
 import yaml
 from ast import literal_eval
-import ansible.module_utils.input_validation.common_utils.data_fetch as get
+import ansible.module_utils.input_validation.common_utils.data_fetch as fetch
 import ansible.module_utils.input_validation.common_utils.data_validation as validate
 from ansible.modules.validate_input import generate_log_failure_message
 
@@ -31,11 +31,9 @@ from ansible.module_utils.input_validation.common_utils import (
     data_verification
 )
 
-from ansible.module_utils.input_validation.validation_flows import scheduler_validation
-
 from ansible.module_utils.local_repo.software_utils import (
     load_json,
-    set_version_variables,
+    load_yaml,
     get_subgroup_dict,
     get_software_names,
     get_json_file_path
@@ -98,14 +96,19 @@ def validate_software_config(
                     )
                 )
 
-    iso_file_path = data.get("iso_file_path", "")
-    not_valid_iso_msg = validation_utils.verify_iso_file(
-        iso_file_path, cluster_os_type, cluster_os_version
-    )
-    if not_valid_iso_msg:
-        errors.append(
-            create_error_msg(
-                "iso_file_path", iso_file_path, not_valid_iso_msg))
+    iso_file_paths = {
+        "x86_64": data.get("x86_64_iso_file_path", ""),
+        "aarch64": data.get("aarch64_iso_file_path", ""),
+    }
+    for arch, iso_file_path in iso_file_paths.items():
+        if len(iso_file_path) > 1:
+            not_valid_iso_msg = validation_utils.verify_iso_file(
+                iso_file_path, cluster_os_type, cluster_os_version
+            )
+            if not_valid_iso_msg:
+                errors.append(
+                    create_error_msg(
+                        f"{arch}_iso_file_path", iso_file_path, not_valid_iso_msg))
 
     #software groups and subgroups l2 validation
     # Check for the additional software field
@@ -116,11 +119,11 @@ def validate_software_config(
         extensions = config.extensions
         fname = "additional_software"
         schema_file_path = schema_base_file_path + "/" + fname + extensions['json']
-        json_files = get.files_recursively(omnia_base_dir + "/" + project_name, extensions['json'])
+        json_files = fetch.files_recursively(omnia_base_dir + "/" + project_name, extensions['json'])
         json_files_dic = {}
 
         for file_path in json_files:
-            json_files_dic.update({get.file_name_from_path(file_path): file_path})
+            json_files_dic.update({fetch.file_name_from_path(file_path): file_path})
         new_file_path = json_files_dic.get("additional_software.json", None)
 
         # Validate the schema of the input file (L1)
@@ -167,51 +170,44 @@ def validate_software_config(
         errors.extend(additional_software_errors)
 
     # create the subgroups and softwares dictionary with version details
-    software_json_data = load_json(input_file_path)
-    subgroup_dict, _ = get_subgroup_dict(software_json_data)
-
-    # mismatches = validate_versions(software_json_data, config.expected_versions)
-    # if mismatches:
-    #     for msg in mismatches:
-    #         errors.append(
-    #             create_error_msg(
-    #                 "Validation Error: ","Version Mismatch found at" , msg
-    #                 )
-    #             )
-
+    subgroup_dict, _ = get_subgroup_dict(data)
     # check if the corresponding json files for softwares and subgroups exists in config folder
-    software_list = get_software_names(input_file_path)
     validation_results = []
     failures = []
     fail_data = []
-    for software in software_list:
-        json_path = get_json_file_path(
-            software, cluster_os_type, cluster_os_version, input_file_path
-        )
-        # Check if json_path is None or if the JSON syntax is invalid
-        if json_path is None:
-            errors.append(
-                create_error_msg(
-                    "Validation Error: ", software,
-                    f"is present in software_config.json. JSON file not found: {os.path.dirname(input_file_path)}/config/{cluster_os_type}/{cluster_os_version}/{software}.json"
-                )
-            )
-        else:
-            try:
-                subgroup_softwares = subgroup_dict.get(software, None)
-                # for each subgroup for a software check for corresponding entry in software.json
-                # eg: for amd the amd.json should contain both amd and rocm entries
-                with open(json_path, "r") as file:
-                    json_data = json.load(file)
-                for subgroup_software in subgroup_softwares:
-                    _, fail_data = validation_utils.validate_softwaresubgroup_entries(
-                        subgroup_software, json_path, json_data, validation_results, failures
-                    )
 
-            except (FileNotFoundError, json.JSONDecodeError) as e:
+    roles_config_file_path = create_file_path(input_file_path, file_names["roles_config"])
+    roles_config_dict = load_yaml(roles_config_file_path)
+    def_archs = list({x["architecture"] for x in roles_config_dict["Groups"].values()})
+
+    for software_pkg in data['softwares']:
+        software = software_pkg['name']
+        arch_list = software_pkg.get('arch', def_archs)
+        json_paths = get_json_file_path(
+            software, cluster_os_type, cluster_os_version, input_file_path, arch_list
+        )
+        for json_path in json_paths:
+            # Check if json_path is None or if the JSON syntax is invalid
+            if not json_path:
                 errors.append(
-                    create_error_msg("Error opening or reading JSON file:", json_path, str(e))
+                    create_error_msg(
+                        "Validation Error: ", software,
+                        f"is present in software_config.json. JSON file not found: {software}.json"
+                    )
                 )
+            else:
+                try:
+                    subgroup_softwares = subgroup_dict.get(software, None)
+                    json_data = load_json(json_path)
+                    for subgroup_software in subgroup_softwares:
+                        _, fail_data = validation_utils.validate_softwaresubgroup_entries(
+                            subgroup_software, json_path, json_data, validation_results, failures
+                        )
+
+                except (FileNotFoundError, json.JSONDecodeError) as e:
+                    errors.append(
+                        create_error_msg("Error opening or reading JSON file:", json_path, str(e))
+                    )
 
     if fail_data:
         errors.append(
@@ -228,39 +224,39 @@ def is_version_valid(actual_version, expected):
     if isinstance(expected, list):
         return actual_version in expected
     return actual_version == expected
- 
+
 def validate_versions(data, expected):
     mismatches = []
- 
+
     # Validate top-level 'softwares'
     for sw in data.get("softwares", []):
         name = sw.get("name")
         version = sw.get("version")
         expected_version = expected.get(name)
- 
+
         if expected_version:
             if not version:
                 mismatches.append(f"{name} is missing a version")
             elif not is_version_valid(version, expected_version):
                 mismatches.append(f"{name} version mismatch: expected {expected_version}, got {version}")
- 
+
     # Validate subgroup software (e.g. "amdgpu": [{...}])
     for parent_key, children in data.items():
         if parent_key == "softwares" or not isinstance(children, list):
             continue
- 
+
         for sub_sw in children:
             name = sub_sw.get("name")
             version = sub_sw.get("version")
             expected_version = expected.get(name)
- 
+
             # Skip if version is not provided
             if expected_version and version:
                 if not is_version_valid(version, expected_version):
                     mismatches.append(
                         f"{name} version mismatch in {parent_key}: expected {expected_version}, got {version}"
                     )
- 
+
     return mismatches
 
 
@@ -1090,14 +1086,44 @@ def validate_omnia_config(
         validate_k8s(data, admin_bmc_networks, sw_list, ha_config, tag_names, errors)
     return errors
 
+def check_is_service_cluster_roles_defined(
+        errors,
+        input_file_path,
+        omnia_base_dir,
+        project_name,
+        logger,
+        module):
+    """
+    Checks if the required service cluster roles are configured in the roles_config.yml file.
+
+    Args:
+        errors (list): A list to store error messages.
+        input_file_path (str): The path to the input file.
+        omnia_base_dir (str): The base directory for Omnia.
+        project_name (str): The name of the project.
+        logger (object): A logger object for logging messages.
+        module (object): A module object for logging messages.
+
+    Returns:
+        True if service cluster roles are defined else returns False
+    """
+    roles_config_file_path = create_file_path(input_file_path, file_names["roles_config"])
+    roles_config_json = validation_utils.load_yaml_as_json(
+        roles_config_file_path, omnia_base_dir, project_name, logger, module)
+    roles_details = roles_config_json.get("Roles", [])
+    # Extract the 'name' values from List1
+    roles_configured = [item['name'] for item in roles_details]
+    service_cluster_roles = ["service_kube_control_plane","service_etcd","service_kube_node"]
+    return all(role in roles_configured for role in service_cluster_roles)
+
 def validate_telemetry_config(
-    _input_file_path,
+    input_file_path,
     data,
-    _logger,
-    _module,
-    _omnia_base_dir,
+    logger,
+    module,
+    omnia_base_dir,
     _module_utils_base,
-    _project_name
+    project_name
 ):
 
     """
@@ -1128,21 +1154,46 @@ def validate_telemetry_config(
     idrac_telemetry_support = data.get("idrac_telemetry_support")
     federated_idrac_telemetry_collection = data.get("federated_idrac_telemetry_collection")
 
+    collection_type = data.get("idrac_telemetry_collection_type")
     if idrac_telemetry_support:
-        collection_type = data.get("idrac_telemetry_collection_type")
-        if collection_type and collection_type not in config.supported_telemetry_collection_type:
+        if collection_type:
+            if collection_type not in config.supported_telemetry_collection_type:
+                errors.append(create_error_msg(
+                    "idrac_telemetry_collection_type",
+                    collection_type,
+                    en_us_validation_msg.UNSUPPORTED_IDRAC_TELEMETRY_COLLECTION_TYPE
+                    )
+                )
+                return errors
+
+            if collection_type == "kafka" and not federated_idrac_telemetry_collection:
+                errors.append(create_error_msg(
+                    "for idrac_telemetry_collection_type",
+                    collection_type,
+                    en_us_validation_msg.KAFKA_ENABLE_FEDERATED_IDRAC_TELEMETRY_COLLECTION
+                    )
+                )
+                return errors
+
+        is_service_cluster_defined = check_is_service_cluster_roles_defined(errors,
+                                    input_file_path,
+                                    omnia_base_dir,
+                                    project_name,
+                                    logger,
+                                    module)
+
+        if federated_idrac_telemetry_collection and not is_service_cluster_defined:
             errors.append(create_error_msg(
-                "idrac_telemetry_collection_type",
-                collection_type,
-                en_us_validation_msg.UNSUPPORTED_IDRAC_TELEMETRY_COLLECTION_TYPE
+                "federated_idrac_telemetry_collection can be",
+                federated_idrac_telemetry_collection,
+                en_us_validation_msg.TELEMETRY_SERVICE_CLUSTER_ENTRY_MISSING_ROLES_CONFIG_MSG
                 )
             )
-
-    if federated_idrac_telemetry_collection and not idrac_telemetry_support:
-        errors.append(create_error_msg(
+        elif not federated_idrac_telemetry_collection and is_service_cluster_defined:
+            errors.append(create_error_msg(
                 "federated_idrac_telemetry_collection",
                 federated_idrac_telemetry_collection,
-                en_us_validation_msg.FEDERATED_IDRAC_TELEMETRY_COLLECTION_FAIL
+                en_us_validation_msg.ENABLE_FEDERATED_IDRAC_TELEMETRY_COLLECTION
                 )
             )
 

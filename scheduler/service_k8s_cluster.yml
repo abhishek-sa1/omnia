@@ -43,6 +43,9 @@
       ansible.builtin.set_fact:
         service_k8s_playbook: true
 
+- name: Invoke validate_config.yml to perform L1 and L2 validations for k8s
+  ansible.builtin.import_playbook: ../input_validation/validate_config.yml
+
 - name: Validate inventory
   ansible.builtin.import_playbook: ../utils/inventory_validation.yml
   when: not ( hostvars['127.0.0.1']['inventory_validation_executed'] | default(false) | bool )
@@ -60,9 +63,6 @@
       ansible.builtin.include_role:
         name: cluster_validation
         tasks_from: validation_status_check.yml
-
-- name: Invoke validate_config.yml to perform L1 and L2 validations for k8s
-  ansible.builtin.import_playbook: ../input_validation/validate_config.yml
 
 - name: Update Repositories/Registries on nodes
   ansible.builtin.import_playbook: ../utils/update_user_repo.yml
@@ -124,3 +124,25 @@
   gather_facts: false
   roles:
     - update_containerd_config
+
+- name: Pull k8s images
+  hosts: kube_control_plane, kube_node, etcd
+  gather_facts: false
+  any_errors_fatal: true
+  roles:
+    - k8s_prepare_images
+
+- name: Deploy plugins on kube control nodes
+  hosts: kube_control_plane[0]
+  gather_facts: false
+  vars:
+    common_plugin:
+      kubernetes_dashboard: false
+      habanalabs-device-plugin: false
+      mpi-operator: false
+      xilinx-device-plugin: false
+      nfs-subdir-external-provisioner: true
+      multus-device-plugin: false
+      whereabouts-device-plugin: true
+  roles:
+    - common_plugins

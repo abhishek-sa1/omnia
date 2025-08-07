@@ -18,7 +18,8 @@
     - name: Set osimage to node object for mapping
       nodeset:
         discovery_mechanism: "{{ mapping_node_group }}"
-        install_osimage: "{{ provision_os_image }}"
+        install_osimage_x86_64: "{{ provision_os_image_x86_64 }}"
+        install_osimage_aarch64: "{{ provision_os_image_aarch64 }}"
         service_osimage: "{{ service_os_image }}"
       changed_when: false
       register: set_osimage_mapping
