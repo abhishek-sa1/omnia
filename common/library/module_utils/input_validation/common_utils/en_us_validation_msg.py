@@ -76,6 +76,7 @@ SERVICE_K8S_ENTRY_MISSING_SOFTWARE_CONFIG_MSG = ("The role service_kube_control_
 SERVICE_NODE_ENTRY_INVALID_ROLES_CONFIG_MSG = ("The 'service_node' role defined in roles_config.yml"
     " is not currently supported and is reserved for future use. Please remove or update this role"
     " to avoid configuration errors.")
+AARCH64_SWITCH_IP_MSG = "Switch and BMC discovery supports only x86_64 architecture"
 
 # provision_config.yml
 DEFAULT_LEASE_TIME_FAIL_MSG = "Please provide a valid default_lease_time."

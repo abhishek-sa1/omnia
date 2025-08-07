@@ -21,6 +21,8 @@ intel_cpu_check=`lscpu | grep -i "^vendor ID" | grep -ic "Intel"`
 # Check if the CPU vendor is AMD
 amd_cpu_check=`lscpu | grep -i "^vendor ID" | grep -ic "AMD"`
 
+nvidia_cpu_check=`lscpu | grep -i "^BIOS Vendor ID" | grep -ic "NVIDIA"`
+
 # Get CPU count
 cpu_count=`lscpu | grep -i "^socket" | grep -o -E "[0-9]+"`
 
@@ -45,6 +47,8 @@ if [ $intel_cpu_check -gt 0 ]; then
 # Check for AMD CPU
 elif [ $amd_cpu_check -gt 0 ]; then
     cpu_str="AMD CPU Found Count=$cpu_count"
+elif [ $nvidia_cpu_check -gt 0 ]; then
+    cpu_str="NVIDIA CPU Found Count=$cpu_count"
 else
     cpu_str="No CPU Found"
 fi
