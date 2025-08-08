@@ -23,9 +23,9 @@
   ansible.builtin.set_fact:
     fetch_unique_roles: "{{ unique_roles | unique | select('in', supported_roles) | list }}"
 
-- name: Read and convert slurm.json to variable
-  ansible.builtin.set_fact:
-    slurm_roles: "{{ lookup('file', hostvars['localhost']['input_project_dir'] + '/config/x86_64/{{ provision_os }}/{{ provision_os_version }}/slurm.json') | from_json }}" # noqa: yaml[line-length]
+# - name: Read and convert slurm.json to variable
+#   ansible.builtin.set_fact:
+#     slurm_roles: "{{ lookup('file', hostvars['localhost']['input_project_dir'] + '/config/x86_64/{{ provision_os }}/{{ provision_os_version }}/slurm.json') | from_json }}" # noqa: yaml[line-length]
 
 - name: Generate postscripts for each role
   ansible.builtin.template:
@@ -33,6 +33,6 @@
     dest: "{{ postscripts_dest_path }}"
     mode: "{{ file_permissions }}"
   loop: "{{ fetch_unique_roles }}"
-  vars:
-    common_packages: "{{ slurm_roles.slurm.cluster | default([]) | selectattr('type', 'equalto', 'rpm') | list }}"
-    role_specific_packages: "{{ slurm_roles[item].cluster | default([]) | selectattr('type', 'equalto', 'rpm') | list }}"
+  # vars:
+  #   common_packages: "{{ slurm_roles.slurm.cluster | default([]) | selectattr('type', 'equalto', 'rpm') | list }}"
+  #   role_specific_packages: "{{ slurm_roles[item].cluster | default([]) | selectattr('type', 'equalto', 'rpm') | list }}"

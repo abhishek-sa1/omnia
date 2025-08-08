@@ -61,8 +61,6 @@ async_time: 300
 poll_time: 15
 supported_roles:
   - oim_ha_node
-  - slurm_control_node
-  - slurm_node
 
 # Usage: omnia_oim_ha_node_postboot.j2
 container_images_path: "{{ oim_shared_path }}/omnia/images/"
