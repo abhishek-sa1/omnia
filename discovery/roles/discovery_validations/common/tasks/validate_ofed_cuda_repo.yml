@@ -59,8 +59,8 @@
 
         - name: Set mlnx_ofed_path for x86_64 and aarch64
           ansible.builtin.set_fact:
-            mlnx_ofed_x86_64_path: "{{ find_ofed_file.files | selectattr('path', 'search', 'x86_64') | selectattr('path', 'search', ofed_version) | map(attribute='path') | first | default('') }}"
-            mlnx_ofed_aarch64_path: "{{ find_ofed_file.files | selectattr('path', 'search', 'aarch64') | selectattr('path', 'search', ofed_version) | map(attribute='path') | first | default('') }}"
+            mlnx_ofed_x86_64_path: "{{ find_ofed_file.files | selectattr('path', 'search', 'x86_64') | selectattr('path', 'search', ofed_version) | map(attribute='path') | first | default('') }}" # noqa: yaml[line-length]
+            mlnx_ofed_aarch64_path: "{{ find_ofed_file.files | selectattr('path', 'search', 'aarch64') | selectattr('path', 'search', ofed_version) | map(attribute='path') | first | default('') }}" # noqa: yaml[line-length]
 
         - name: Check mlnx_ofed_x86_64_path for x86_64
           when: x86_64_iso_status
@@ -143,8 +143,8 @@
 
         - name: Set cuda_toolkit_path for x86_64 and aarch64
           ansible.builtin.set_fact:
-            cuda_toolkit_x86_64_path: "{{ find_cuda_file.files | selectattr('path', 'search', 'x86_64') | selectattr('path', 'search', cuda_version) | map(attribute='path') | first | default('') }}"
-            cuda_toolkit_aarch64_path: "{{ find_cuda_file.files | selectattr('path', 'search', 'aarch64') | selectattr('path', 'search', cuda_version) | map(attribute='path') | first | default('') }}"
+            cuda_toolkit_x86_64_path: "{{ find_cuda_file.files | selectattr('path', 'search', 'x86_64') | selectattr('path', 'search', cuda_version) | map(attribute='path') | first | default('') }}" # noqa: yaml[line-length]
+            cuda_toolkit_aarch64_path: "{{ find_cuda_file.files | selectattr('path', 'search', 'aarch64') | selectattr('path', 'search', cuda_version) | map(attribute='path') | first | default('') }}" # noqa: yaml[line-length]
 
         - name: Check cuda_toolkit_x86_64_path for x86_64
           when: x86_64_iso_status
