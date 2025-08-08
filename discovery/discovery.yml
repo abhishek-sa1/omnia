@@ -87,6 +87,12 @@
       ansible.builtin.include_role:
         name: discovery_mechanism/oim     # noqa: role-name[path]
 
+- name: Update corosync config in PCS container
+  hosts: oim
+  connection: ssh
+  tags: management_layer
+  gather_facts: false
+  tasks:
     - name: Update corosync config
       when: hostvars['omnia_provision']['enable_oim_ha'] | default(false)
       ansible.builtin.include_role:
