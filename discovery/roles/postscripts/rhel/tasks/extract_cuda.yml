@@ -35,7 +35,7 @@
     - name: Extract cuda rpms for x86_64
       ansible.builtin.shell: >
         set -o pipefail && \
-        cd {{ cuda_tmp__path }} && rpm2cpio {{ cuda_toolkit_path }} | cpio -i -d
+        cd {{ cuda_tmp_path }} && rpm2cpio {{ cuda_toolkit_path }} | cpio -i -d
       changed_when: true
   rescue:
     - name: Invalid cuda rpm file
