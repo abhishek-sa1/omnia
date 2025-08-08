@@ -14,7 +14,6 @@
 ---
 
 # Usage: main.yml
-service_nodes_db_status: "Found {{ service_node_info.query_result | length }} service node(s) with booted status."
 provision_container_name: "omnia_provision"
 
 # Usage: disable_service_node_boot.yml
