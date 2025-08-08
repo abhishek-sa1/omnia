@@ -61,7 +61,7 @@
   ansible.builtin.command: "{{ xcat_path }}/chdef oim_ha_node -m postscripts=omnia_ofed"
   changed_when: true
   when:
-    - enable_oim_ha
+    - omnia_oim_status
     - ofed_config_status
 
 - name: Configure postscripts for CUDA
@@ -74,7 +74,7 @@
   ansible.builtin.command: "{{ xcat_path }}/chdef oim_ha_node -m postscripts=omnia_cuda"
   changed_when: true
   when:
-    - enable_oim_ha
+    - omnia_oim_status
     - ofed_config_status
 
 - name: Configure postscripts for ROCm
@@ -87,7 +87,7 @@
   ansible.builtin.command: "{{ xcat_path }}/chdef oim_ha_node -m postscripts=omnia_rocm"
   changed_when: true
   when:
-    - enable_oim_ha
+    - omnia_oim_status
     - amdgpu_config_status
 
 - name: Configure postscripts for ROCm
