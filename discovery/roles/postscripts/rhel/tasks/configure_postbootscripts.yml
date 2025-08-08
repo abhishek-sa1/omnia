@@ -43,7 +43,7 @@
     dest: "{{ item.dest }}"
     mode: "{{ item.mode }}"
   with_items: "{{ pcs_postbootscript_path }}"
-  when: enable_oim_ha
+  when: omnia_oim_status
 
 - name: Copy k8s service cluster postboot script to postscripts
   ansible.builtin.template:
@@ -59,7 +59,7 @@
     dest: "{{ item.dest }}"
     mode: "{{ item.mode }}"
   with_items: "{{ allow_firewall_postbootscript_path }}"
-  when: enable_oim_ha
+  when: omnia_oim_status
 
 - name: Configure pcs container setup postbootscripts
   ansible.builtin.command: "{{ xcat_path }}/chdef oim_ha_node -p postbootscripts=\"omnia_oim_ha_node_postboot\""
@@ -69,7 +69,7 @@
 - name: Configure firewalld setup postbootscripts on service or OIM Ha node
   ansible.builtin.command: "{{ xcat_path }}/chdef oim_ha_node -p postbootscripts=\"omnia_allow_firewall_ports\""
   changed_when: true
-  when: enable_oim_ha
+  when: omnia_oim_status
 
 - name: Configure k8s service cluster postboot script to postscripts
   ansible.builtin.command: "{{ xcat_path }}/chdef {{ k8s_service_groups }} -p postbootscripts=\"omnia_k8s_service_cluster_postboot\""
