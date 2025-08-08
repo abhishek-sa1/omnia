@@ -25,7 +25,7 @@
 
 - name: Read and convert slurm.json to variable
   ansible.builtin.set_fact:
-    slurm_roles: "{{ lookup('file', hostvars['localhost']['input_project_dir'] + '/config/{{ provision_os }}/{{ provision_os_version }}/slurm.json') | from_json }}" # noqa: yaml[line-length]
+    slurm_roles: "{{ lookup('file', hostvars['localhost']['input_project_dir'] + '/config/x86_64/{{ provision_os }}/{{ provision_os_version }}/slurm.json') | from_json }}" # noqa: yaml[line-length]
 
 - name: Generate postscripts for each role
   ansible.builtin.template:
