@@ -32,8 +32,8 @@ xcat_sbin_path: /opt/xcat/sbin
 
 # Usage: remove_old_ssh_key.yml
 empty_discover_node_msg: |
-  "Failed. No nodes were discovered. Please ensure the input related to discovery details is correct inside roles_config.yml, provision_config.yml and network_spec.yml
-   and check if IPMI is enabled on the nodes if using BMC discovery mechanism."
+  "Failed. No nodes were discovered. Please ensure the input related to discovery details is correct inside roles_config.yml, provision_config.yml
+  and network_spec.yml. Also check if IPMI is enabled on the nodes if using BMC discovery mechanism."
 
 # Usage: update_idrac_group_csv.yml
 telemetry_shared_path: "/opt/omnia/telemetry"
