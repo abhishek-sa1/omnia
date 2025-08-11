@@ -89,16 +89,16 @@
                 path: "{{ mlnx_ofed_aarch64_path }}"
               register: check_mlnx_ofed_aarch64
 
-            - name: Warning - Please wait, This task will take few seconds - aarch64
-              ansible.builtin.pause:
-                seconds: "{{ warning_wait_time }}"
-                prompt: "{{ ofed_repo_warning_msg }}"
-              when: not check_mlnx_ofed_aarch64.stat.exists
+            # - name: Warning - Please wait, This task will take few seconds - aarch64
+            #   ansible.builtin.pause:
+            #     seconds: "{{ warning_wait_time }}"
+            #     prompt: "{{ ofed_repo_warning_msg }}"
+            #   when: not check_mlnx_ofed_aarch64.stat.exists
 
             - name: Set ofed_config_aarch64_status to true
               ansible.builtin.set_fact:
                 ofed_config_aarch64_status: true
-              when: check_mlnx_ofed_x86_64.stat.exists
+              when: check_mlnx_ofed_aarch64.stat.exists
 
         - name: Set ofed_config_status to true
           ansible.builtin.set_fact:
