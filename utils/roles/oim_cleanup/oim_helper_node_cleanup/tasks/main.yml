@@ -38,39 +38,6 @@
       delegate_to: omnia_provision
       connection: ssh
 
-    - name: Get all discovered service nodes from DB
-      community.postgresql.postgresql_query:
-        db: omniadb
-        login_user: postgres
-        query: |
-          SELECT node,bmc_ip
-          FROM cluster.nodeinfo
-          WHERE role = 'service_node' AND (status IS NOT NULL AND status = 'booted');
-        login_password: "{{ postgresdb_password }}"
-      become: true
-      become_user: postgres
-      register: service_node_info
-      failed_when: false
-      no_log: true
-      delegate_to: omnia_provision
-      connection: ssh
-
-    - name: Check if any service nodes were found
-      ansible.builtin.debug:
-        msg: "{{ service_nodes_db_status }}"
-      when:
-        - service_node_info.query_result is defined
-        - service_node_info.query_result | length > 0
-
-    - name: Disable the boot option on service nodes
-      ansible.builtin.include_tasks: disable_helper_node_boot.yml
-      loop: "{{ service_node_info.query_result | default([]) | list }}"
-      loop_control:
-        loop_var: node_info
-      when:
-        - service_node_info.query_result is defined
-        - service_node_info.query_result | length > 0
-
     - name: Get all discovered oim_ha_nodes from DB
       community.postgresql.postgresql_query:
         db: omniadb

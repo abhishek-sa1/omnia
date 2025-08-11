@@ -25,8 +25,7 @@ GROUPS_STATIC = "all,bmc_static"
 GROUPS_DYNAMIC = "all,bmc_dynamic"
 CHAIN_SETUP = "runcmd=bmcsetup"
 provision_os_image_x86_64 = sys.argv[1]
-service_os_image = sys.argv[2]
-provision_os_image_aarch64 = sys.argv[5]
+provision_os_image_aarch64 = sys.argv[2]
 CHAIN_OS_X86_64 = f"osimage={provision_os_image_x86_64}"
 CHAIN_OS_AARCH64 = f"osimage={provision_os_image_aarch64}"
 DISCOVERY_MECHANISM = "mtms"
@@ -51,29 +50,20 @@ def get_node_obj():
 
 def update_node_obj_nm():
     """
-    Updates the node objects in the database.
+	Updates the node objects in the cluster based on the discovery mechanism.
 
-    - This function establishes a connection with omniadb and retrieves the service tags of the 
-      nodes from the cluster.nodeinfo table.
-    - It then iterates over the service tags and converts them to lowercase.
-    - After that, it iterates over the service tags again and converts them to uppercase.
-    - For each service tag, it retrieves the node, admin_ip, bmc_ip, bmc_mode, role, cluster_name, group_name, and
-      architecture from the cluster.nodeinfo table.
-    - If the bmc_mode is None, it prints "No device is found!".
-    - If the bmc_mode is "static", it checks if the service_os_image is not "None" and if the
-      role contains the string "service".
-    - If both conditions are true, it sets the chain_os variable to "osimage={service_os_image}".
-    - It then executes a command to update the node objects using the /opt/xcat/bin/chdef command.
-    - If the bmc_mode is "dynamic", it executes a command to update the node objects using the
-      /opt/xcat/bin/chdef command.
-    - Finally, it closes the cursor and the database connection.
+	Parameters:
+		- DISCOVERY_MECHANISM (str): The discovery mechanism used to discover nodes.
+		- oim_admin_ip (str): The IP address of the OIM admin interface.
+		- CHAIN_OS_X86_64 (str): The chain os image for x86_64 architecture.
+		- CHAIN_OS_AARCH64 (str): The chain os image for aarch64 architecture.
+		- db_path (str): The path to the database.
+		- provision_os_image_x86_64 (str): The provision os image for x86_64 architecture.
+		- provision_os_image_aarch64 (str): The provision os image for aarch64 architecture.
 
-    Parameters:
-        None
-
-    Returns:
-        None
-    """
+	Returns:
+		None
+	"""
 
     # Establish a connection with omniadb
     conn = omniadb_connection.create_connection()

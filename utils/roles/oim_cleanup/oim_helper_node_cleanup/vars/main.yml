@@ -14,9 +14,9 @@
 ---
 
 # Usage: main.yml
-service_nodes_db_status: "Found {{ service_node_info.query_result | length }} service node(s) with booted status."
 provision_container_name: "omnia_provision"
-# Usage: disable_service_node_boot.yml
+
+# Usage: disable_helper_node_boot.yml
 idrac_system_url: "https://{{ node_info.bmc_ip }}/redfish/v1/Systems/"
 bootmode_failure_msg_template: >
   Failed to set UEFI mode or disable non-PXE boot entries on node {{ node_info.node }} (BMC: {{ node_info.bmc_ip }})

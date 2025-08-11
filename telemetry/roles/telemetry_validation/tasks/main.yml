@@ -40,6 +40,7 @@
       ansible.builtin.include_tasks: validate_telemetry_inventory.yml
       when:
         - idrac_telemetry_support
+        - federated_idrac_telemetry_collection
 
     - name: Validate iDRAC inventory
       ansible.builtin.include_tasks: validate_idrac_inventory.yml
@@ -48,7 +49,3 @@
     - name: Validate kube prometheus
       ansible.builtin.include_tasks: validate_k8s_prometheus.yml
       when: kube_prometheus_support
-
-    # - name: Custom validation for federated way of telemetry
-    #   ansible.builtin.include_tasks: validate_service_node_status.yml
-    #   when: federated_idrac_telemetry_collection

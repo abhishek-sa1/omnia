@@ -55,7 +55,7 @@
 - name: Extract BMC_IP values for federated telemetry
   when: hostvars['localhost']['federated_idrac_telemetry_collection']
   block:
-    - name: Group compute node BMC_IPs by service node
+    - name: Group service k8s cluster BMC_IPs with parent
       ansible.builtin.set_fact:
         sn_bmc_ips: >-
           {{
@@ -75,7 +75,7 @@
             )
           }}
 
-    - name: Group service_nodes BMC_IPs
+    - name: Group service k8s cluster BMC_IPs without parent
       ansible.builtin.set_fact:
         oim_bmc_ips: >-
           {{

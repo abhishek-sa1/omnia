@@ -38,12 +38,6 @@
 - name: Set fact discovered_nodes for task on service nodes
   ansible.builtin.set_fact:
     discovered_nodes: "{{ query_status.query_result | default([]) | list }}"
-    discovered_service_nodes: >-
-      {{
-        query_status.query_result
-        | selectattr('role', 'search', 'service_node')
-        | list
-      }}
 
 - name: Remove old ssh key for IP of all discovered nodes
   when: query_status.query_result is defined

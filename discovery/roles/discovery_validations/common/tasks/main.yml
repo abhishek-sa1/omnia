@@ -68,10 +68,6 @@
 - name: Include telemetry config variables
   ansible.builtin.include_tasks: include_telemetry_config.yml
 
-- name: Validate service_node repo
-  ansible.builtin.include_tasks: validate_service_node_repo.yml
-  when: service_role_required | default(false)
-
 # - name: Validate local repo
 #   ansible.builtin.include_tasks: validate_local_repo.yml
 
@@ -114,9 +110,3 @@
 
 - name: Validate racadm repo
   ansible.builtin.include_tasks: validate_racadm_repo.yml
-
-# - name: Validate Broadcom repo
-#   ansible.builtin.include_tasks: validate_broadcom_repo.yml
-
-# - name: Validate Intel Gaudi repo
-#   ansible.builtin.include_tasks: validate_intelgaudi_repo.yml

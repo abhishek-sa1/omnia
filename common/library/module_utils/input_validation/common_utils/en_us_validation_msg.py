@@ -36,7 +36,7 @@ RESOURCE_MGR_ID_MSG = ("The resource_mgr_id is mandatory if the group is mapped 
 GRP_EXIST_MSG = "A valid group must be provided."
 INVALID_SWITCH_IP_MSG = "Please provide a valid switch IPv4 address (example: 10.5.0.1)."
 GRP_ROLE_MSG = "Please associate this group with a role."
-PARENT_SERVICE_NODE_MSG = ("Group is associated with login, compiler_node,"
+PARENT_SERVICE_ROLE_MSG = ("Group is associated with login_node, compiler_node,"
                           "kube_control_plane, slurm_control_plane, service_kube_control_plane, service_kube_node role(s).")
 PARENT_SERVICE_ROLE_DNE_MSG = ("Parent field is only supported when 'service_kube_control_plane, service_kube_node' role is defined,"
     " Please remove the 'parent' field from this role's group definition.")
@@ -66,16 +66,9 @@ EMPTY_OR_SYNTAX_ERROR_ROLES_CONFIG_MSG = ("File is either empty or contains synt
 DUPLICATE_GROUP_NAME_IN_LAYERS_MSG = ("The following groups are mapped to both frontend and "
                                      "compute layers, which is not allowed for group: [{0}] in "
                                      "frontend layer: [{1}] and compute layer: [{2}]")
-SERVICE_NODE_ENTRY_MISSING_ROLES_CONFIG_MSG = ("The role service_node defined in roles_config.yml,"
-    " but service_node entry missing in sofware_config.json, "
-    "Please rerun local repo with service_node entry in software_config.json "
-    "to deploy service nodes successfully")
 SERVICE_K8S_ENTRY_MISSING_SOFTWARE_CONFIG_MSG = ("The role service_kube_control_plane is defined in roles_config.yml, "
     "but the service_k8s package entry is missing in software_config.json. "
     "To deploy Kubernetes in the service_k8s cluster, the package must be added to software_config.json.")
-SERVICE_NODE_ENTRY_INVALID_ROLES_CONFIG_MSG = ("The 'service_node' role defined in roles_config.yml"
-    " is not currently supported and is reserved for future use. Please remove or update this role"
-    " to avoid configuration errors.")
 AARCH64_SWITCH_IP_MSG = "Switch and BMC discovery supports only x86_64 architecture"
 
 # provision_config.yml

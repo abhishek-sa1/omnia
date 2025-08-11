@@ -25,7 +25,7 @@ xcat_sbin_path: /opt/xcat/sbin
 osimage_search_key: install-compute
 service_osimage_search_key: install-service
 tmp_dir: /opt/osimages
-xcat_install_dir: /install
+install_dir: /install
 mode: "755"
 nfs_image_failure: "Failed to create and/or save osimages with NFS"
 tftp_grub2_aarch64_path: "/tftpboot/boot/grub2/grub2.aarch64"

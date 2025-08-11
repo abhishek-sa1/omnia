@@ -285,7 +285,7 @@ def validate_vip_address(
     errors,
     config_type,
     vip_address,
-    service_node_vip,
+    ha_node_vip_list,
     admin_network,
     admin_netmaskbits,
     oim_admin_ip
@@ -298,7 +298,7 @@ def validate_vip_address(
         - errors (list): A list to store error messages.
         - config_type (str): The type of configuration being validated.
         - vip_address (str): The virtual IP address to be validated.
-        - service_node_vip (list): A list of existing service node VIPs.
+        - ha_node_vip_list (list): A list of existing VIPs.
         - admin_network (dict): A dictionary containing admin network configuration.
         - admin_netmaskbits (str): The netmask bits value of the admin network.
         - oim_admin_ip (str): The IP address of the OIM admin interface.
@@ -309,7 +309,7 @@ def validate_vip_address(
     """
 
     # validate if the same virtual_ip_address is already use
-    if vip_address in service_node_vip:
+    if vip_address in ha_node_vip_list:
         errors.append(
             create_error_msg(
                 f"{config_type} virtual_ip_address:",
@@ -411,58 +411,6 @@ def validate_k8s_head_node_ha(
                 create_error_msg("IP overlap -", None, en_us_validation_msg.IP_OVERLAP_FAIL_MSG)
             )
 
-
-def validate_service_node_ha(
-    errors,
-    config_type,
-    ha_data,
-    network_spec_data,
-    _roles_config_json,
-    all_service_tags,
-    ha_node_vip_list
-):
-    """
-    Validates the high availability configuration for a service node.
-
-    Parameters:
-    errors (list): A list to store error messages.
-    config_type (str): The type of high availability configuration.
-    ha_data (dict): A dictionary containing high availability data.
-    network_spec_data (dict): A dictionary containing network specification data.
-    _roles_config_json (dict): A dictionary containing roles configuration data.
-    all_service_tags (list): A list of all service tags.
-    ha_node_vip_list (list): A list of virtual IP addresses for high availability nodes.
-
-    Returns:
-    None
-    """
-    active_node_service_tag = ha_data.get("active_node_service_tag")
-    passive_nodes = ha_data.get("passive_nodes", [])
-    vip_address = ha_data.get("virtual_ip_address")
-
-    # get network_spec data
-    admin_network = network_spec_data["admin_network"]
-    admin_netmaskbits = network_spec_data["admin_netmaskbits"]
-    oim_admin_ip = network_spec_data["oim_admin_ip"]
-
-    # validate active_node_service_tag and passive_node_service_tag
-    validate_service_tag_presence(
-        errors, config_type, all_service_tags, active_node_service_tag, passive_nodes
-    )
-
-    # validate if duplicate virtual ip address is present
-    if vip_address:
-        validate_vip_address(
-            errors,
-            config_type,
-            vip_address,
-            ha_node_vip_list,
-            admin_network,
-            admin_netmaskbits,
-            oim_admin_ip
-        )
-
-
 def validate_oim_ha(
     errors,
     config_type,
@@ -551,8 +499,6 @@ def validate_oim_ha(
 
 # Dispatch table maps config_type to validation handler
 ha_validation = {
-    "service_node_ha": validate_service_node_ha,
-    # Add more config_type functions here as needed
     "oim_ha": validate_oim_ha,
     # "slurm_head_node_ha":validation_slurm_head_node_ha # TODO: Add slurm head node validation
     "service_k8s_cluster_ha": validate_k8s_head_node_ha,
@@ -653,7 +599,6 @@ def validate_high_availability_config(
 
     ha_configs = [
         ("oim_ha", ["admin_virtual_ip_address", "active_node_service_tag", "passive_nodes"]),
-        ("service_node_ha", ["service_nodes"]),
         ("slurm_head_node_ha", ["virtual_ip_address", "active_node_service_tag", "passive_nodes"]),
         ("k8s_head_node_ha", ["virtual_ip_address", "active_node_service_tags"])
     ]
@@ -668,16 +613,6 @@ def validate_high_availability_config(
                     ha_role = "oim_ha_node"  # expected role to be defined in roles_config
                     check_and_validate_ha_role_in_roles_config(errors, roles_config_json, ha_role)
                     validate_ha_config(ha_data, mandatory_fields, errors, config_type=config_name)
-                elif config_name == "service_node_ha":
-                    ha_role = "service_node"  # expected role to be defined in roles_config
-                    check_and_validate_ha_role_in_roles_config(errors, roles_config_json, ha_role)
-                    for service_node in ha_data["service_nodes"]:
-                        validate_ha_config(
-                            service_node,
-                            ["virtual_ip_address", "active_node_service_tag", "passive_nodes"],
-                            errors,
-                            config_type=config_name,
-                        )
                 else:
                     validate_ha_config(ha_data, mandatory_fields, errors, config_type=config_name)
         else:

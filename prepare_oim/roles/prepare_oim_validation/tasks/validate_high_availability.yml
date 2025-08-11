@@ -34,7 +34,6 @@
 - name: Set high_availability_status
   ansible.builtin.set_fact:
     enable_oim_ha: "{{ high_availability_config.ansible_facts.oim_ha.enable_oim_ha | default(false) }}"
-    enable_service_ha: "{{ high_availability_config.ansible_facts.service_node_ha.enable_service_ha | default(false) }}"
 
 - name: Register NFS Check
   ansible.builtin.set_fact:
@@ -42,7 +41,7 @@
 
 - name: Fail if HA is enabled but external NFS is not configured
   when: >
-    (enable_oim_ha or enable_service_ha) and
+    (enable_oim_ha) and
     (not nfs_used or (nfs_type | default('') != 'external'))
   ansible.builtin.fail:
     msg: >-
