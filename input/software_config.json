@@ -1,18 +1,17 @@
 {
     "cluster_os_type": "rhel",
     "cluster_os_version": "9.6",
-    "x86_64_iso_file_path": "",
-    "aarch64_iso_file_path": "",
+    "iso_file_path": "",
     "repo_config": "always",
     "softwares": [
-        {"name": "amdgpu", "version": "6.3.1"},
-        {"name": "cuda", "version": "12.9.1"},
-        {"name": "ofed", "version": "24.10-3.2.5.0"},
-        {"name": "openldap"},
-        {"name": "nfs"},
-        {"name": "k8s", "version":"1.31.4"},
-        {"name": "service_k8s","version": "1.31.4"},
-        {"name": "slurm"}
+        {"name": "amdgpu", "version": "6.3.1", "arch": ["x86_64"]},
+        {"name": "cuda", "version": "12.8.0", "arch": ["x86_64","aarch64"]},
+        {"name": "ofed", "version": "24.10-3.2.5.0", "arch": ["x86_64"]},
+        {"name": "openldap", "arch": ["x86_64","aarch64"]},
+        {"name": "nfs", "arch": ["x86_64","aarch64"]},
+        {"name": "k8s", "version":"1.31.4", "arch": ["x86_64"]},
+        {"name": "service_k8s","version": "1.31.4", "arch": ["x86_64","aarch64"]},
+        {"name": "slurm", "arch": ["x86_64","aarch64"]}
     ],
     "amdgpu": [
         {"name": "rocm", "version": "6.3.1" }
@@ -20,6 +19,6 @@
     "slurm": [
         {"name": "slurm_control_node"},
         {"name": "slurm_node"},
-        {"name": "login_node"}
+        {"name": "login"}
     ]
 }
