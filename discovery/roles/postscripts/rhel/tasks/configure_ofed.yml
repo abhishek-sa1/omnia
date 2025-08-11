@@ -19,11 +19,19 @@
     state: directory
     mode: "{{ repo_permission }}"
 
-- name: Copy OFED ISO file
+- name: Copy OFED ISO file - x86_64
   ansible.builtin.copy:
-    src: "{{ mlnx_ofed_path }}"
-    dest: "{{ mlnx_ofed_repo }}/{{ mlnx_ofed_path.split('/')[-1] }}"
+    src: "{{ mlnx_ofed_x86_64_path }}"
+    dest: "{{ mlnx_ofed_repo }}/{{ mlnx_ofed_x86_64_path.split('/')[-1] }}"
     mode: "{{ ofed_permission }}"
+  when: ofed_config_x86_64_status
+
+- name: Copy OFED ISO FILE - aarch64
+  ansible.builtin.copy:
+    src: "{{ mlnx_ofed_aarch64_path }}"
+    dest: "{{ mlnx_ofed_repo }}/{{ mlnx_ofed_aarch64_path.split('/')[-1] }}"
+    mode: "{{ ofed_permission }}"
+  when: ofed_config_aarch64_status
 
 - name: Copy OFED script to postscripts
   ansible.builtin.template:
