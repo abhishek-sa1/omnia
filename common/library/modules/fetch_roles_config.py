@@ -21,30 +21,27 @@ This module provides functions for fetching roles from an OmniDB database.
 from ansible.module_utils.basic import AnsibleModule
 
 MANAGEMENT_LAYER_ROLES = {
-    "oim_ha_node", "service_node", "login_node", "compiler_node", "kube_control_plane", "etcd",
+    "oim_ha_node", "login_node", "compiler_node", "kube_control_plane", "etcd",
     "slurm_control_node", "auth_server", "service_kube_control_plane", "service_etcd", "service_kube_node"
     }
 SECOND_LAYER_ROLES = {"default", "kube_node", "slurm_node"}
-NON_SERVICE_ROLES = (MANAGEMENT_LAYER_ROLES | SECOND_LAYER_ROLES) - {"service_node"}
+NON_SERVICE_ROLES = MANAGEMENT_LAYER_ROLES | SECOND_LAYER_ROLES
 
 def validate_roles(roles, layer, module, management_layer_roles=MANAGEMENT_LAYER_ROLES, second_layer_roles=SECOND_LAYER_ROLES, non_service_roles=NON_SERVICE_ROLES): # type: ignore
     """
-    Validates roles based on multiple conditions:
-    1. Roles should only belong to either management_layer or compute-layer roles.
-    2. At least one role should exist in the given layer.
-    3. Groups associated with management_layer roles should not be in compute-layer roles.
-    4. Groups assigned to 'service_node' should not be in other management_layer roles.
+    Validates the roles configuration.
 
-    :param roles: Dictionary where keys are role names and values are dictionaries with a 'groups'
-                  key containing a list of groups.
-    :param management_layer_roles: Set of management_layer role names.
-    :param compute_layer_roles: Set of compute-layer role names.
-    :param layer: Specifies which layer should have at least one role.
-                  Should be 'first' or 'default'.
-    :raises RoleValidationError: If validation fails, raises an exception with the list of errors.
-    :return: True if validation passes.
+    Args:
+        roles (dict): A dictionary of roles with their configurations.
+        layer (str): The layer of the roles (either 'first' or 'compute').
+        module (AnsibleModule): An Ansible module object.
+        management_layer_roles (set, optional): A set of management layer roles. Defaults to MANAGEMENT_LAYER_ROLES.
+        second_layer_roles (set, optional): A set of second layer roles. Defaults to SECOND_LAYER_ROLES.
+        non_service_roles (set, optional): A set of non-service roles. Defaults to NON_SERVICE_ROLES.
+
+    Returns:
+        None
     """
-
     # Create a mapping of roles to groups (converted to sets for efficiency)
     role_groups = {role: set(data.get("groups", [])) for role, data in roles.items()}
 
@@ -63,16 +60,10 @@ def validate_roles(roles, layer, module, management_layer_roles=MANAGEMENT_LAYER
         if not defined_roles.intersection(management_layer_roles):
             raise ValueError("At least one role must be from the management_layer roles.")
     else:
-        if 'service_node' in defined_roles:
-            if not defined_roles.intersection(second_layer_roles):
-                raise ValueError(
-                    f"At least one role must be defined from - \
-                        {second_layer_roles} in roles_config.yml")
-        else:
-            if not defined_roles.intersection(non_service_roles):
-                raise ValueError(
-                    f"At least one role must be defined from - \
-                        {non_service_roles} roles_config.yml")
+        if not defined_roles.intersection(non_service_roles):
+            raise ValueError(
+                f"At least one role must be defined from - \
+                    {non_service_roles} roles_config.yml")
 
     # Collect all groups used by management_layer and compute-layer roles
     management_layer_groups = {group for role in management_layer_roles \
@@ -85,16 +76,6 @@ def validate_roles(roles, layer, module, management_layer_roles=MANAGEMENT_LAYER
     if common_groups:
         errors.append(f"Groups {common_groups} \
                       are assigned to both management_layer and compute-layer roles.")
-
-    # Check 4: Ensure groups in 'service_node' role are not part of other management_layer roles
-    service_groups = role_groups.get("service_node", set())
-
-    for role in management_layer_roles:
-        if role != "service_node":
-            overlapping_groups = service_groups.intersection(role_groups.get(role, set()))
-            if overlapping_groups:
-                errors.append(f"Groups {overlapping_groups} \
-                              from 'service_node' role are also part of management_layer role '{role}'.")
 
     # Raise an error if validation fails
     if errors:
@@ -124,10 +105,7 @@ def filter_roles(roles_data, layer):
     if layer == "first":
         valid_roles = set(roles_data.keys()).intersection(MANAGEMENT_LAYER_ROLES)
     else:
-        if 'service_node' in roles_data:
-            valid_roles = set(roles_data.keys()).intersection(SECOND_LAYER_ROLES)
-        else:
-            valid_roles = set(roles_data.keys()).intersection(NON_SERVICE_ROLES)
+        valid_roles = set(roles_data.keys()).intersection(NON_SERVICE_ROLES)
     return valid_roles
 
 

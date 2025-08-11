@@ -229,16 +229,14 @@
       when: >
         hostvars['localhost']['omnia_share_option'] == 'NFS' and
         (
-          (hostvars['localhost']['oim_ha_data'].ansible_facts.oim_ha.enable_oim_ha | default(false)) or
-          (hostvars['localhost']['has_service_role'] | default(false))
+          (hostvars['localhost']['oim_ha_data'].ansible_facts.oim_ha.enable_oim_ha | default(false))
         )
 
 - name: Save Container Images
   when: >
     hostvars['localhost']['omnia_share_option'] == 'NFS' and
     (
-      (hostvars['localhost']['oim_ha_data'].ansible_facts.oim_ha.enable_oim_ha | default(false)) or
-      (hostvars['localhost']['has_service_role'] | default(false))
+      (hostvars['localhost']['oim_ha_data'].ansible_facts.oim_ha.enable_oim_ha | default(false))
     )
   ansible.builtin.import_playbook: "{{ playbook_dir }}/../utils/save_container_images.yml"
   vars:

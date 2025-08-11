@@ -39,14 +39,6 @@
     - name: Update iDRAC ip with group details
       ansible.builtin.include_tasks: update_idrac_group_csv.yml
 
-    - name: Update postgres conf for service nodes
-      ansible.builtin.include_tasks: service_node_postgres_setting.yml
-      when: service_role_required | default(false)
-
-    - name: Create service node host groups
-      ansible.builtin.include_tasks: create_service_node_groups.yml
-      when: hierarchical_provision_status | default(false)
-
     - name: Update postgres config for passive OIM nodes
       when: enable_oim_ha | default(false)
       ansible.builtin.include_tasks: passive_oim_postgres_setting.yml

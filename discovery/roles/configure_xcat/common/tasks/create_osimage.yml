@@ -57,7 +57,7 @@
 
         - name: Set install directory
           ansible.builtin.set_fact:
-            xcat_install_dir: "{{ xcat_install_dir }}/{{ os_dist }}/{{ os_arch }}"
+            xcat_install_dir: "{{ install_dir }}/{{ os_dist }}/{{ os_arch }}"
 
         - name: Copy grub2 files - aarch64
           ansible.builtin.copy:
@@ -94,7 +94,7 @@
 
     - name: Set install directory
       ansible.builtin.set_fact:
-        xcat_install_dir: "{{ xcat_install_dir }}/{{ os_dist }}/{{ os_arch }}"
+        xcat_install_dir: "{{ install_dir }}/{{ os_dist }}/{{ os_arch }}"
 
     - name: Create osimage install directory
       ansible.builtin.file:
@@ -126,11 +126,6 @@
       ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ provision_os_image_aarch64 }} pkgdir={{ xcat_install_dir }}"
       changed_when: true
       when: architecture == "aarch64"
-
-    - name: Modify service osimages with xCAT install directory
-      ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage {{ service_os_image }} pkgdir={{ xcat_install_dir }}"
-      changed_when: true
-      when: architecture == "x86_64"
 
     - name: Copy grub2 files - aarch64
       ansible.builtin.copy:

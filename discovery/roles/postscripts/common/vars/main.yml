@@ -32,12 +32,6 @@ all_nodes_warning_msg: |
   "[WARNING] Not found any nodes using the given discovery mechanism.
   Verify all the input parameters are valid and re-run discovery_provision.yml"
 
-# Usage: check_nodes_service.yml
-service_nodes_warning_msg: |
-  "[WARNING] Service nodes not found. The service_node role is mentioned in the roles_config.yml file,
-  but no nodes were found for this role using the specified discovery mechanism.
-  Please verify that all the input parameters are valid and re-run the discovery_provision.yml"
-
 # Usage: generate_postscripts_slurm.yml
 role_template_path: "{{ role_path }}/templates/omnia_{{ item }}.j2"
 postscripts_dest_path: "/install/postscripts/omnia_{{ item }}"
@@ -67,13 +61,6 @@ async_time: 300
 poll_time: 15
 supported_roles:
   - oim_ha_node
-  - service_node
-  - slurm_control_node
-  - slurm_node
-
-# Usage: configure_service_node.yml
-genesis_package_path:
-  - { src: "{{ role_path }}/../rhel/files/xcat-genesis-base-x86_64.tar.gz", dest: "/install/xcat-genesis-base-x86_64.tar.gz", mode: "755" }
 
 # Usage: omnia_oim_ha_node_postboot.j2
 container_images_path: "{{ oim_shared_path }}/omnia/images/"

@@ -32,12 +32,6 @@
       ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_x86_64 }} synclists={{ synclists_dest_path_x86_64 }}"
       changed_when: true
 
-    - name: Configure synclist to service osimage
-      ansible.builtin.command: >
-        "{{ xcat_path }}/chdef -t osimage -o {{ service_os_image }} synclists={{ synclists_dest_path_x86_64 }} otherpkgdir='' otherpkglist=''"
-      changed_when: true
-      when: service_role_required
-
 - name: Synclist configuration for aarch64
   when: aarch64_iso_status
   block:

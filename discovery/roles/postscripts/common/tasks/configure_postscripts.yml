@@ -58,30 +58,23 @@
     - ofed_config_status
 
 - name: Configure postscripts for OFED
-  ansible.builtin.command: "{{ xcat_path }}/chdef {{ service_oim_groups }} -m postscripts=omnia_ofed"
+  ansible.builtin.command: "{{ xcat_path }}/chdef oim_ha_node -m postscripts=omnia_ofed"
   changed_when: true
   when:
-    - service_oim_groups != ''
+    - omnia_oim_status
     - ofed_config_status
-
-- name: Verify CUDA repo created
-  ansible.builtin.stat:
-    path: "{{ cuda_core_path }}"
-  register: cuda_repo_stat
-  when: cuda_config_status
 
 - name: Configure postscripts for CUDA
   ansible.builtin.command: "{{ xcat_path }}/chdef all -p postscripts=omnia_cuda"
   changed_when: true
   when:
     - cuda_config_status
-    - cuda_repo_stat.stat.exists
 
 - name: Configure postscripts for OFED
-  ansible.builtin.command: "{{ xcat_path }}/chdef {{ service_oim_groups }} -m postscripts=omnia_cuda"
+  ansible.builtin.command: "{{ xcat_path }}/chdef oim_ha_node -m postscripts=omnia_cuda"
   changed_when: true
   when:
-    - service_oim_groups != ''
+    - omnia_oim_status
     - cuda_config_status
 
 - name: Configure postscripts for ROCm
@@ -91,10 +84,10 @@
     - amdgpu_config_status
 
 - name: Configure postscripts for ROCm
-  ansible.builtin.command: "{{ xcat_path }}/chdef {{ service_oim_groups }} -m postscripts=omnia_rocm"
+  ansible.builtin.command: "{{ xcat_path }}/chdef oim_ha_node -m postscripts=omnia_rocm"
   changed_when: true
   when:
-    - service_oim_groups != ''
+    - omnia_oim_status
     - amdgpu_config_status
 
 - name: Configure postscripts for ROCm

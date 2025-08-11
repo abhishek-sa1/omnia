@@ -34,7 +34,3 @@
 
     - name: Set provision os image switch_based
       ansible.builtin.include_tasks: "{{ role_path }}/../switch_based/tasks/main.yml"
-
-- name: Configure service from configure_xcat role
-  ansible.builtin.include_tasks: "configure_service_role_xcat_details.yml"
-  when: discovered_service_nodes | default([]) | length > 0

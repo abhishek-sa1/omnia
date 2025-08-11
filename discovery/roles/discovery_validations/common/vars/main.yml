@@ -63,7 +63,6 @@ nfs_not_configured: "When enabling OIM HA or K8s Service Cluster an NFS server m
 
 # Usage: include_composable_roles_config.yml
 omnia_metadata_file: "/opt/omnia/.data/oim_metadata.yml"
-service_node_metadata_path: "/opt/omnia/.data/service_node_metadata.yml"
 metadata_perm: "0644"
 
 # Usage: validate_image_tars.yml
@@ -72,26 +71,12 @@ omnia_images_tar_missing_msg: |
   To support either OIM HA or heirarchical provisioning, these images tar file is required.
   To ensure all omnia base image tar files are present execute `utils/save_container_images.yml` utility playbook.
 
-# invalid_share_option_msg: |
-#   [ERROR] Invalid value \"{{ omnia_share_option }}\" provided for omnia share path type.
-#   For hierarchical-based discovery and provisioning, this must be set to \"NFS\".
-#   Please rerun 'omnia_startup.sh' and enter correct omnia share path type as \"NFS\"
-#   to continue with hierarchical-based discovery and provisioning.
-service_node_not_found_msg: |
-  "The service role is not defined in the roles_config.yml, but enable_service_ha is set to True.
-  Kindly define the service_node role in roles_config and rerun the playbook."
 oim_ha_node_not_found_msg: |
   "The OIM HA role is not defined in the roles_config.yml, but enable_oim_ha is set to True.
   Kindly define the oim_ha_node role in roles_config and rerun the playbook."
 nfs_internal_warning_msg: |
   "WARNING: It is recommended to use External NFS for hierarchical cluster.
   If you must use Internal NFS, ensure OIM has enough storage space and sufficient hardware resources."
-service_node_no_parent_msg: |
-  Failed. The service_node role is defined in roles_config.yml, but none of the compute layer groups have a parent field specified.
-  The issue arises because the playbook is attempting to provision the compute layer, but none of the groups have a valid parent
-  field defined. To fix this, define the parent field in the compute layer groups within roles_config.yml for hierarchical provisioning,
-  and re-run the playbook.
-  If all nodes are to be provisioned from oim, then comment out the service_node role in roles_config.yml and re-run the playbook.
 ha_nfs_error_msg: |
   ERROR: Internal NFS is not supported with HA OIM or Service HA.
   Please configure External NFS for HA capabilities.
@@ -99,12 +84,7 @@ service_cluster_nfs_error_msg: |
   ERROR: Internal NFS is not supported for K8s Service Cluster, external NFS server must be configured.
   Please run the oim_cleanup.yml in utils and re-run the omnia_startup.sh script using the NFS(external) option.
 warning_wait_time_10s: 10
-hierarchical_provision_warning_msg: |
-  "WARNING: The service_node role is defined in roles_config.yml, but none of the groups have a parent field specified.
-  This execution is for compute layer provisioning, and no groups have a valid parent field defined. If this is intentional,
-  you may ignore this warning and proceed with the playbook execution.
-  If this is unintentional, stop the execution, define the parent field in the compute layer groups within roles_config.yml
-  for hierarchical provisioning, and re-run the playbook."
+
 # Usage: include_local_repo_config.yml
 local_repo_config_file: "{{ hostvars['localhost']['input_project_dir'] }}/local_repo_config.yml"
 software_config_file: "{{ hostvars['localhost']['input_project_dir'] }}/software_config.json"
@@ -284,33 +264,11 @@ os_package_map:
   rocky: rpm
   ubuntu: deb
 
-# Usage: validate_service_nodes.yml
-service_node_repo_failed_msg: "[Failed] It seems you have not executed local_repo.yml with service_node in software_config.yml.
-service_node package is required for service_node role provisioning."
-pulp_repo_fail_msg: "Failed. It seems pulp is not configured properly.
-Run local_repo/local_repo.yml with required packages in software_config.yml."
-
 # Usage: validate_racadm_repo.yml
 racadm_warning_msg: |
   "[WARNING] local_repo.yml is not executed for downloading racadm packages.
   Hence, racadm will not be installed on the nodes post provisioning."
 racadm_pulp_name: tarballracadm
-
-# Usage: validate_intelgaudi_repo.yml
-intelgaudi_version_warning_msg: "[WARNING] software_config.json does not have the version for 'intelgaudi'.
-Hence Habana stack will not be installed on the nodes post provisioning."
-intelgaudi_repo_warning_msg: "[WARNING] local_repo.yml is not executed for downloading 'intelgaudi' packages.
-Habana stack will not be installed on the nodes post provisioning."
-
-# Usage: validate_broadcom_repo.yml
-roce_version_warning_msg: "[WARNING] software_config.json does not have the version for bcm_roce.
-Hence RoCE drivers will not be installed on the nodes post provisioning."
-roce_repo_warning_msg: "[WARNING] bcm_roce is mentioned in software_config.json and local_repo.yml not executed for current bcm_roce version.
-RoCE drivers will not be installed on the nodes post provisioning."
-roce_src_version_warning_msg: "[WARNING] software_config.json does not have the version for bcm_roce_libraries.
-Hence RoCE libraries will not be installed on the nodes post provisioning."
-roce_src_repo_warning_msg: "[WARNING] bcm_roce_libraries is mentioned in software_config.json and local_repo.yml not executed for current bcm_roce_libraries
- version. RoCE libraries will not be installed on the nodes post provisioning."
 
 # Usage: validate_site_config.yml
 site_config_file: "{{ hostvars['localhost']['input_project_dir'] }}/site_config.yml"

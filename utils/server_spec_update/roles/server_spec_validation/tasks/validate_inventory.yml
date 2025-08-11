@@ -31,7 +31,7 @@
       {{
         hostvars
         | dict2items
-        | rejectattr('key', 'in', ['localhost','oim','omnia_provision','service_nodes'])
+        | rejectattr('key', 'in', ['localhost','oim','omnia_provision'])
         | items2dict
       }}
 
