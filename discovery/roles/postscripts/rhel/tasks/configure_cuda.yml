@@ -50,9 +50,9 @@
 - name: Update osimage with cuda repository - x86_64
   ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_x86_64 }} -p pkgdir={{ cuda_core_x86_64_path }}"
   changed_when: true
-  when: x86_64_iso_status
+  when: cuda_config_x86_64_status
 
 - name: Update osimage with cuda repository - aarch64
   ansible.builtin.command: "{{ xcat_path }}/chdef -t osimage -o {{ provision_os_image_aarch64 }} -p pkgdir={{ cuda_core_aarch64_path }}"
   changed_when: true
-  when: aarch64_iso_status
+  when: cuda_config_aarch64_status
