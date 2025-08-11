@@ -32,7 +32,7 @@
     cuda_tmp_path: "{{ cuda_tmp_aarch64_path }}"
     cuda_core_path: "{{ cuda_core_aarch64_path }}"
     cuda_toolkit_path: "{{ cuda_toolkit_aarch64_path }}"
-  when: cuda_config_x86_64_status
+  when: cuda_config_aarch64_status
 
 - name: Copy CUDA script to postscripts
   ansible.builtin.template:
