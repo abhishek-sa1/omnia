@@ -34,6 +34,24 @@
     cuda_toolkit_path: "{{ cuda_toolkit_aarch64_path }}"
   when: cuda_config_aarch64_status
 
+# - name: Configure cuda rpms for x86_64 ( This task will take some time )
+#   extract_cuda:
+#     cuda_tmp_path: "{{ cuda_tmp_x86_64_path }}"
+#     cuda_core_path: "{{ cuda_core_x86_64_path }}"
+#     cuda_toolkit_path: "{{ cuda_toolkit_x86_64_path }}"
+#     repo_permission: "{{ repo_permission }}"
+#     invalid_cuda_rpm_fail_msg: "{{ invalid_cuda_rpm_fail_msg }}"
+#   when: cuda_config_x86_64_status
+
+# - name: Configure cuda rpms for aarch64 ( This task will take some time )
+#   extract_cuda:
+#     cuda_tmp_path: "{{ cuda_tmp_aarch64_path }}"
+#     cuda_core_path: "{{ cuda_core_aarch64_path }}"
+#     cuda_toolkit_path: "{{ cuda_toolkit_aarch64_path }}"
+#     repo_permission: "{{ repo_permission }}"
+#     invalid_cuda_rpm_fail_msg: "{{ invalid_cuda_rpm_fail_msg }}"
+#   when: cuda_config_aarch64_status
+
 - name: Copy CUDA script to postscripts
   ansible.builtin.template:
     src: "{{ item.src }}"
