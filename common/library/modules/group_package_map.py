@@ -170,9 +170,10 @@ def modify_addl_software(addl_dict):
     """
     new_dict = {}
     for key, value in addl_dict.items():
-        clust_list = value.get('cluster', [])
-        type_dict = get_type_dict(clust_list)
-        new_dict[key] = type_dict
+        if value is not None:
+            clust_list = value.get('cluster', [])
+            type_dict = get_type_dict(clust_list)
+            new_dict[key] = type_dict
     return new_dict
 
 
@@ -238,7 +239,7 @@ def main():
             msg=f"{addl_key} not found in {sw_list}",
             grp_pkg_map={})
 
-    addl_soft_arch_values = next((sw["arch"] for sw in sw_cfg_data["softwares"] if sw["name"] == "nginx"), [])
+    addl_soft_arch_values = next((sw["arch"] for sw in sw_cfg_data["softwares"] if sw["name"] == addl_key), [])
 
     req_addl_soft_list = [
         sub_group.get('name') for sub_group in sw_cfg_data.get(
@@ -256,16 +257,18 @@ def main():
         key = ','.join(all_groups)
         req_addl_soft.setdefault(key, {'cluster': []})['cluster'].extend(temp_addl_pkgs['cluster'])
         addl_software_dict = modify_addl_software(req_addl_soft)
-        split_comma_dict = split_comma_keys(addl_software_dict)
+        tmp_split_comma_dict = split_comma_keys(addl_software_dict)
 
         # intersection of split_comma_dict and roles_yaml_data
-        common_roles = split_comma_dict.keys() & roles_dict.keys()
+        common_roles = tmp_split_comma_dict.keys() & roles_dict.keys()
 
         for role in common_roles:
-            bundle = split_comma_dict.pop(role)
+            bundle = tmp_split_comma_dict.pop(role)
             group_list = roles_dict.get(role)
             for grp in group_list:
-                careful_merge(split_comma_dict, grp, bundle)
+                careful_merge(tmp_split_comma_dict, grp, bundle)
+
+        split_comma_dict.update(tmp_split_comma_dict)
 
     changed = True
     module.exit_json(
