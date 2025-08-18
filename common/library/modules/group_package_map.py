@@ -23,6 +23,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 RPM_LIST_BASE = "rpm"
 REBOOT_KEY = "reboot_required"
+SUPPORTED_ARCH = ["x86_64","aarch64"]
 
 # Read JSON file
 
@@ -49,7 +50,7 @@ def read_json_file(file_path, module):
 # Read YAML file
 
 
-def read_roles_config(file_path, module):
+def read_roles_config(file_path, module, arch):
     """
     Reads a YAML file containing roles configuration and
      returns the roles configuration and all groups.
@@ -68,7 +69,10 @@ def read_roles_config(file_path, module):
     except yaml.YAMLError as exc:
         module.exit_json(failed=True, msg=f"Error loading YAML {file_path}: {exc}")
     role_cfg = {item['name']: item['groups'] for item in data.get('Roles', [])}
-    all_groups = list(data.get('Groups', {}).keys())
+    #all_groups = list(data.get('Groups', {}).keys())
+
+    all_groups = [key for key, value in data.get('Groups', {}).items() if value.get('architecture') == arch]
+
     return role_cfg, all_groups
 
 
@@ -212,13 +216,16 @@ def main():
 
     inp_path = module.params.get('input_path')
     addl_key = module.params['software_bundle_key']
+
     if inp_path:
         inp_path = inp_path.rstrip('/')
         if not os.path.isdir(inp_path):
             module.exit_json(failed=True, msg=f"{inp_path} is not a directory")
         sw_cfg_path = inp_path + '/software_config.json'
         sw_cfg_data = read_json_file(sw_cfg_path, module)
-        addl_soft = f"{inp_path}/config/{sw_cfg_data['cluster_os_type']}/{sw_cfg_data['cluster_os_version']}/{addl_key}.json"
+        addl_soft = {}
+        for arch in SUPPORTED_ARCH:
+            addl_soft[arch] = f"{inp_path}/config/{arch}/{sw_cfg_data['cluster_os_type']}/{sw_cfg_data['cluster_os_version']}/{addl_key}.json"
         roles_config = f"{inp_path}/roles_config.yml"
     else:
         addl_soft = module.params.get('software_bundle')
@@ -230,30 +237,35 @@ def main():
         module.exit_json(
             msg=f"{addl_key} not found in {sw_list}",
             grp_pkg_map={})
+
+    addl_soft_arch_values = next((sw["arch"] for sw in sw_cfg_data["softwares"] if sw["name"] == "nginx"), [])
+
     req_addl_soft_list = [
         sub_group.get('name') for sub_group in sw_cfg_data.get(
             addl_key, [])]
     req_addl_soft_list.append(addl_key)  # add the additional_software key
 
-    addl_soft_json_data = read_json_file(addl_soft, module)
-    req_addl_soft = {sub_group: addl_soft_json_data.get(
-        sub_group) for sub_group in req_addl_soft_list}
+    split_comma_dict = {}
+    for arch in addl_soft_arch_values:
+        addl_soft_json_data = read_json_file(addl_soft[arch], module)
+        req_addl_soft = {sub_group: addl_soft_json_data.get(
+            sub_group) for sub_group in req_addl_soft_list}
 
-    roles_dict, all_groups = read_roles_config(roles_config, module)
-    temp_addl_pkgs = req_addl_soft.pop(addl_key, {})
-    key = ','.join(all_groups)
-    req_addl_soft.setdefault(key, {'cluster': []})['cluster'].extend(temp_addl_pkgs['cluster'])
-    addl_software_dict = modify_addl_software(req_addl_soft)
-    split_comma_dict = split_comma_keys(addl_software_dict)
+        roles_dict, all_groups = read_roles_config(roles_config, module, arch)
+        temp_addl_pkgs = req_addl_soft.pop(addl_key, {})
+        key = ','.join(all_groups)
+        req_addl_soft.setdefault(key, {'cluster': []})['cluster'].extend(temp_addl_pkgs['cluster'])
+        addl_software_dict = modify_addl_software(req_addl_soft)
+        split_comma_dict = split_comma_keys(addl_software_dict)
 
-    # intersection of split_comma_dict and roles_yaml_data
-    common_roles = split_comma_dict.keys() & roles_dict.keys()
+        # intersection of split_comma_dict and roles_yaml_data
+        common_roles = split_comma_dict.keys() & roles_dict.keys()
 
-    for role in common_roles:
-        bundle = split_comma_dict.pop(role)
-        group_list = roles_dict.get(role)
-        for grp in group_list:
-            careful_merge(split_comma_dict, grp, bundle)
+        for role in common_roles:
+            bundle = split_comma_dict.pop(role)
+            group_list = roles_dict.get(role)
+            for grp in group_list:
+                careful_merge(split_comma_dict, grp, bundle)
 
     changed = True
     module.exit_json(
