@@ -111,6 +111,8 @@ def validate_software_config(
 
     #software groups and subgroups l2 validation
     # Check for the additional software field
+    # commenting out for now - validation has to be updated for both x86_64 and aarch64
+    """
     if "additional_software" in data:
         # Run schema validation and call validate_additional_software()
         schema_base_file_path = os.path.join(module_utils_base,'input_validation','schema')
@@ -177,6 +179,7 @@ def validate_software_config(
             new_file_path, additional_software_data,
             logger, module, omnia_base_dir, module_utils_base, project_name)
         errors.extend(additional_software_errors)
+    """
 
     # create the subgroups and softwares dictionary with version details
     subgroup_dict, _ = get_subgroup_dict(data)
@@ -191,6 +194,8 @@ def validate_software_config(
 
     for software_pkg in data['softwares']:
         software = software_pkg['name']
+        if "additional_software" == software:
+            continue
         arch_list = software_pkg.get('arch', def_archs)
         json_paths = get_json_file_path(
             software, cluster_os_type, cluster_os_version, input_file_path, arch_list
