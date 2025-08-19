@@ -49,32 +49,32 @@ if [[ $nvidia_check == *"NVIDIA"* ]]; then
     echo "PATH=$PATH:/usr/local/cuda/bin" >> /root/.bashrc
     apt clean >> "$LOG_FILE"
     apt update >> "$LOG_FILE"
-    echo "# CUDA {{ cuda_version }}installation completed successfully in Debian" >> "$LOG_FILE"
+    echo "# CUDA {{ cuda_version }} installation completed successfully in Debian" >> "$LOG_FILE"
 
   elif [ "$str_os_type" = "redhat" ]; then
 
     if [[ "{{ cuda_version }}" > "12.8.0" ]] || [[ "{{ cuda_version }}" == "12.8.0" ]]; then
       echo "Starting CUDA installation in RHEL/Rocky" >> "$LOG_FILE"
       echo "# Executing groupinstall 'Development Tools'" >> "$LOG_FILE"
-      dnf groupinstall "Development Tools" -y
+      sudo dnf groupinstall "Development Tools" -y
       echo "# Installing kernel-devel & kernel-headers" >> "$LOG_FILE"
-      dnf install kernel-devel kernel-headers -y >> "$LOG_FILE"
+      sudo dnf install kernel-devel kernel-headers -y >> "$LOG_FILE"
       dnf clean all
       echo "# Installing cuda kmod-nvidia-open-dkms nvidia-driver nvidia-fabricmanager llvm-libs" >> "$LOG_FILE"
-      dnf install cuda kmod-nvidia-open-dkms nvidia-driver nvidia-fabricmanager llvm-libs -y >> "$LOG_FILE"
+      sudo dnf install cuda kmod-nvidia-open-dkms nvidia-driver nvidia-fabricmanager llvm-libs -y >> "$LOG_FILE"
       systemctl enable nvidia-persistenced
       systemctl start nvidia-persistenced
       echo "CUDA installation completed in RHEL/Rocky" >> "$LOG_FILE"
     else
       echo "Starting CUDA installation in RHEL/Rocky" >> "$LOG_FILE"
-      dnf groupinstall "Development Tools" -y
-      dnf install kernel-devel kernel-headers -y
+      sudo dnf groupinstall "Development Tools" -y
+      sudo dnf install kernel-devel kernel-headers -y
       dnf clean all
-      dnf install nvidia-driver cuda-drivers kmod-nvidia-latest-dkms dkms llvm-libs -y
-      dnf -y install cuda cuda-drivers-fabricmanager
+      sudo dnf install nvidia-driver cuda-drivers kmod-nvidia-latest-dkms dkms llvm-libs -y
+      sudo dnf -y install cuda cuda-drivers-fabricmanager
       systemctl enable nvidia-persistenced
       systemctl start nvidia-persistenced
-      echo "CUDA installation completed in RHEL/Rocky" >> "$LOG_FILE"
+      echo "CUDA {{ cuda_version }} installation completed in RHEL/Rocky" >> "$LOG_FILE"
 
     fi
   fi
