@@ -194,12 +194,12 @@ def validate_software_config(
 
     for software_pkg in data['softwares']:
         software = software_pkg['name']
+        if "additional_software" == software:
+            continue
         arch_list = software_pkg.get('arch', def_archs)
         json_paths = get_json_file_path(
             software, cluster_os_type, cluster_os_version, input_file_path, arch_list
         )
-        if "additional_software" == software:
-            continue
         for json_path in json_paths:
             # Check if json_path is None or if the JSON syntax is invalid
             if not json_path:
