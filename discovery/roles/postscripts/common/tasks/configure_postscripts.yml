@@ -75,7 +75,7 @@
   changed_when: true
   when:
     - omnia_oim_status
-    - ofed_config_status
+    - cuda_config_status
 
 - name: Configure postscripts for ROCm
   ansible.builtin.command: "{{ xcat_path }}/chdef all -p postscripts=omnia_rocm"
