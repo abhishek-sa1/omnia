@@ -22,6 +22,6 @@
 # ***********************************************************************
 
 # Enable or disable build stream pipeline
-# Accepted values: true or false
+# Accepted values: boolean values - (true or false) or(yes or no)
 # Default: false
 enable_build_stream: false
