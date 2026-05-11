@@ -29,9 +29,10 @@
     image_key: "{{ image_key | default('') }}"
     base_image_suffix: ""
     compute_image_suffix: ""
+    s3_endpoint: "http://{{ oim_node_name }}.{{ domain_name }}:9000"
 
-- name: Set minio_s3_username and minio_s3_password
+- name: Set s3_access and s3_secret
   ansible.builtin.set_fact:
-    minio_s3_username: "{{ hostvars['localhost']['minio_s3_username'] }}"
-    minio_s3_password: "{{ hostvars['localhost']['minio_s3_password'] }}"
+    s3_access: "{{ hostvars['localhost']['minio_s3_username'] }}"
+    s3_secret: "{{ hostvars['localhost']['minio_s3_password'] }}"
   no_log: true
