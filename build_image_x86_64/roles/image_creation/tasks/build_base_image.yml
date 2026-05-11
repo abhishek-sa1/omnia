@@ -15,11 +15,11 @@
 
 - name: Set facts for x86_64 image templates vars
   ansible.builtin.set_fact:
-    rhel_tag: "{{ hosvars['localhost']['rhel_tag'] }}"
-    oim_node_name: "{{ hosvars['localhost']['oim_node_name'] }}"
-    domain_name: "{{ hosvars['localhost']['domain_name'] }}"
-    rhel_x86_64_repos: "{{ hosvars['localhost']['rhel_x86_64_repos'] }}"
-    x86_64_base_image_packages: "{{ hosvars['localhost']['x86_64_base_image_packages'] }}"
+    rhel_tag: "{{ hostvars['localhost']['rhel_tag'] }}"
+    oim_node_name: "{{ hostvars['localhost']['oim_node_name'] }}"
+    domain_name: "{{ hostvars['localhost']['domain_name'] }}"
+    rhel_x86_64_repos: "{{ hostvars['localhost']['rhel_x86_64_repos'] }}"
+    x86_64_base_image_packages: "{{ hostvars['localhost']['x86_64_base_image_packages'] }}"
 
 - name: Normalize build stream inputs for base image
   ansible.builtin.set_fact:
