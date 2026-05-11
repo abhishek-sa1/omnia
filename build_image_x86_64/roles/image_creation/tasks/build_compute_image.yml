@@ -13,22 +13,6 @@
 #  limitations under the License.
 ---
 
-- name: Set facts for x86_64 image templates vars
-  ansible.builtin.set_fact:
-    rhel_tag: "{{ hostvars['localhost']['rhel_tag'] }}"
-    oim_node_name: "{{ hostvars['localhost']['oim_node_name'] }}"
-    domain_name: "{{ hostvars['localhost']['domain_name'] }}"
-    rhel_x86_64_repos: "{{ hostvars['localhost']['rhel_x86_64_repos'] }}"
-    x86_64_base_image_packages: "{{ hostvars['localhost']['x86_64_base_image_packages'] }}"
-    compute_images_dict: "{{ hostvars['localhost']['compute_images_dict'] }}"
-
-- name: Normalize build stream inputs
-  ansible.builtin.set_fact:
-    enable_build_stream: "{{ enable_build_stream | default(false) | bool }}"
-    build_stream_job_id: "{{ build_stream_job_id | default('') }}"
-    image_key: "{{ image_key | default('') }}"
-    compute_image_suffix: ""
-
 - name: Set compute image suffix when build stream inputs present
   ansible.builtin.set_fact:
     compute_image_suffix: "_{{ build_stream_job_id }}-{{ image_key | default('') }}"
