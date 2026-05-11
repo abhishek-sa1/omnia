@@ -58,6 +58,8 @@
             {{ ochami_x86_64_image | join(' ') }} \
             {{ ochami_base_command | join(' ') }} \
             2>&1 | /usr/bin/tee {{ openchami_x86_64_base_image_log_path }}
+      delegate_to: oim
+      connection: ssh
       async: 3600
       poll: 0
       register: base_image_build
@@ -66,6 +68,8 @@
     - name: Wait for x86_64 base image build to complete
       ansible.builtin.async_status:
         jid: "{{ base_image_build.ansible_job_id }}"
+      delegate_to: oim
+      connection: ssh
       register: job_result
       until: job_result.finished
       retries: "{{ job_retry }}"
@@ -76,6 +80,8 @@
         cmd: "regctl repo ls {{ oim_node_name }}.{{ domain_name }}:5000"
       changed_when: false
       register: verify_base_osimage
+      delegate_to: oim
+      connection: ssh
 
     - name: Fail if x86_64 base osimage not created
       ansible.builtin.fail:
