@@ -20,6 +20,7 @@
     domain_name: "{{ hostvars['localhost']['domain_name'] }}"
     rhel_x86_64_repos: "{{ hostvars['localhost']['rhel_x86_64_repos'] }}"
     x86_64_base_image_packages: "{{ hostvars['localhost']['x86_64_base_image_packages'] }}"
+    compute_images_dict: 
 
 - name: Normalize build stream inputs for base image
   ansible.builtin.set_fact:

@@ -21,6 +21,7 @@
     domain_name: "{{ hostvars['localhost']['domain_name'] }}"
     rhel_aarch64_repos: "{{ hostvars['localhost']['rhel_aarch64_repos'] }}"
     aarch64_base_image_packages: "{{ hostvars['localhost']['aarch64_base_image_packages'] }}"
+    compute_images_dict: "{{ hostvars['localhost']['compute_images_dict'] }}"
 
 - name: Normalize build stream inputs for base image
   ansible.builtin.set_fact:
