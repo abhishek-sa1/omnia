@@ -105,13 +105,6 @@
         msg: "{{ base_image_failure_msg }}"
 
   always:
-    - name: Remove generated base image config
-      ansible.builtin.file:
-        path: "{{ openchami_work_dir }}/images/{{ rhel_aarch64_base_image_name }}-{{ rhel_tag }}.yaml"
-        state: absent
-      delegate_to: "{{ aarch64_build_host }}"
-      connection: ssh
-
     - name: Set openchami SELinux context
       ansible.builtin.command: chcon -R system_u:object_r:container_file_t:s0 "{{ oim_shared_path }}/omnia/openchami"
       changed_when: true

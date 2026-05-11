@@ -44,7 +44,7 @@ ochami_base_command:
   - -c 'update-ca-trust extract && image-build --config /home/builder/config.yaml --log-level DEBUG'
 
 # build_base_image.yml
-openchami_log_dir: /opt/omnia/log/openchami
+openchami_log_dir: "{{ oim_shared_path }}/omnia/log/openchami"
 openchami_x86_64_base_image_log_path: "{{ openchami_log_dir }}/x86_64_base_image.log"
 # build_base_image.yml - image-build config template
 openchami_base_image_config_template: "{{ role_path }}/templates/images/rhel-base-config.yaml.j2"

@@ -13,6 +13,9 @@
 #  limitations under the License.
 ---
 
+- name: Include prepare pulp image task
+  ansible.builtin.include_tasks: prepare_pulp_image.yml
+
 - name: Include metadata vars
   ansible.builtin.include_vars: "{{ omnia_metadata_file }}"
   register: include_metadata
