@@ -1,0 +1,39 @@
+# Copyright 2026 Dell Inc. or its subsidiaries. All Rights Reserved.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+---
+
+- name: Set facts for aarch64 image templates vars
+  ansible.builtin.set_fact:
+    rhel_tag: "{{ hostvars['localhost']['rhel_tag'] }}"
+    oim_node_name: "{{ hostvars['localhost']['oim_node_name'] }}"
+    domain_name: "{{ hostvars['localhost']['domain_name'] }}"
+    rhel_aarch64_repos: "{{ hostvars['localhost']['rhel_aarch64_repos'] }}"
+    aarch64_base_image_packages: "{{ hostvars['localhost']['aarch64_base_image_packages'] }}"
+    compute_images_dict: "{{ hostvars['localhost']['compute_images_dict'] }}"
+
+- name: Normalize build stream inputs for base image
+  ansible.builtin.set_fact:
+    enable_build_stream: "{{ enable_build_stream | default(false) | bool }}"
+    build_stream_job_id: "{{ build_stream_job_id | default('') }}"
+    image_key: "{{ image_key | default('') }}"
+    base_image_suffix: ""
+    compute_image_suffix: ""
+    aarch64_build_host: "{{ groups['admin_aarch64'][0] }}"
+    s3_endpoint: "http://{{ oim_node_name }}.{{ domain_name }}:9000"
+
+- name: Set s3_access and s3_secret
+  ansible.builtin.set_fact:
+    s3_access: "{{ hostvars['localhost']['minio_s3_username'] }}"
+    s3_secret: "{{ hostvars['localhost']['minio_s3_password'] }}"
+  no_log: true
