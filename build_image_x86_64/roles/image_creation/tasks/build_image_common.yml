@@ -13,6 +13,16 @@
 #  limitations under the License.
 ---
 
+- name: Include storage config
+  block:
+    - name: Include storge_config.yml
+      ansible.builtin.include_vars: "{{ storge_config_file_path }}"
+      register: storge_config_include
+  rescue:
+    - name: Failed to include storage config, using defaults
+      ansible.builtin.fail:
+        msg: "{{ storge_config_syntax_fail_msg }} Error: {{ storge_config_include.message }}"
+
 - name: Set facts for x86_64 image templates vars
   ansible.builtin.set_fact:
     rhel_tag: "{{ hostvars['localhost']['rhel_tag'] }}"
@@ -29,10 +39,16 @@
     image_key: "{{ image_key | default('') }}"
     base_image_suffix: ""
     compute_image_suffix: ""
-    s3_endpoint: "http://{{ oim_node_name }}.{{ domain_name }}:9000"
 
 - name: Set s3_access and s3_secret
   ansible.builtin.set_fact:
-    s3_access: "{{ hostvars['localhost']['minio_s3_username'] }}"
-    s3_secret: "{{ hostvars['localhost']['minio_s3_password'] }}"
+    s3_access: "{{ hostvars['localhost']['s3_access_id'] | default('admin', true) }}"
+    s3_secret: "{{ hostvars['localhost']['s3_secret_key'] }}"
   no_log: true
+
+- name: Set s3_endpoint
+  ansible.builtin.set_fact:
+    s3_endpoint: >-
+      {{ s3_configurations.endpoint_url
+         if s3_configurations.provider == 'powerscale'
+         else 'http://' + oim_node_name + '.' + domain_name + ':9000' }}

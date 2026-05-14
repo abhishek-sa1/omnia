@@ -23,7 +23,6 @@ dir_permissions_755: "0755"
 pulp_cert_host_path: "{{ oim_shared_path }}/omnia/pulp/settings/certs/pulp_webserver.crt"
 job_retry: "120"
 job_delay: "30"
-network_spec: "{{ input_project_dir }}/network_spec.yml"
 pulp_webserver_cert_path: "/opt/omnia/pulp/settings/certs/pulp_webserver.crt"
 anchors_path: "/etc/pki/ca-trust/source/anchors/pulp_webserver.crt"
 openchami_work_dir: "{{ oim_shared_path }}/omnia/openchami/workdir"
@@ -57,4 +56,7 @@ compute_image_failure_msg: |
 # build_compute_image.yml - image-build config template
 openchami_compute_image_config_template: "{{ role_path }}/templates/images/rhel-compute-config.yaml.j2"
 
+network_spec: "{{ input_project_dir }}/network_spec.yml"
 network_spec_syntax_fail_msg: "Failed to load network_spec.yml due to syntax error"
+storge_config_file_path: "{{ input_project_dir }}/storge_config.yml"
+storge_config_syntax_fail_msg: "Failed to load storge_config.yml due to syntax error"
