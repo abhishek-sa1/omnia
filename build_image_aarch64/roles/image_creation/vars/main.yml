@@ -51,3 +51,5 @@ compute_image_failure_msg: |
 
 # build_compute_image.yml - image-build config template
 openchami_compute_image_config_template: "{{ role_path }}/templates/images/rhel-compute-config.yaml.j2"
+storage_config_file_path: "{{ input_project_dir }}/storage_config.yml"
+storage_config_syntax_fail_msg: "Failed to load storage_config.yml due to syntax error"

@@ -15,13 +15,13 @@
 
 - name: Include storage config
   block:
-    - name: Include storge_config.yml
-      ansible.builtin.include_vars: "{{ storge_config_file_path }}"
-      register: storge_config_include
+    - name: Include storage_config.yml
+      ansible.builtin.include_vars: "{{ storage_config_file_path }}"
+      register: storage_config_include
   rescue:
     - name: Failed to include storage config, using defaults
       ansible.builtin.fail:
-        msg: "{{ storge_config_syntax_fail_msg }} Error: {{ storge_config_include.message }}"
+        msg: "{{ storage_config_syntax_fail_msg }} Error: {{ storge_config_include.message }}"
 
 - name: Set facts for x86_64 image templates vars
   ansible.builtin.set_fact:

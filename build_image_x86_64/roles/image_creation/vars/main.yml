@@ -58,5 +58,5 @@ openchami_compute_image_config_template: "{{ role_path }}/templates/images/rhel-
 
 network_spec: "{{ input_project_dir }}/network_spec.yml"
 network_spec_syntax_fail_msg: "Failed to load network_spec.yml due to syntax error"
-storge_config_file_path: "{{ input_project_dir }}/storge_config.yml"
-storge_config_syntax_fail_msg: "Failed to load storge_config.yml due to syntax error"
+storage_config_file_path: "{{ input_project_dir }}/storage_config.yml"
+storage_config_syntax_fail_msg: "Failed to load storage_config.yml due to syntax error"
