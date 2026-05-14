@@ -21,6 +21,12 @@
     - (build_stream_job_id | default('') | length) > 0
     - (image_key | default('') | length) > 0
 
+- name: Ensure log directory exists
+  ansible.builtin.file:
+    path: "{{ openchami_log_dir }}"
+    state: directory
+    mode: "{{ dir_permissions_755 }}"
+
 - name: Create x86_64 compute image log files
   ansible.builtin.file:
     path: "{{ openchami_log_dir }}/{{ item.key }}{{ compute_image_suffix }}_compute_image.log"
@@ -55,7 +61,7 @@
         -v {{ openchami_work_dir }}/images/rhel-{{ item.key }}{{ compute_image_suffix }}-{{ rhel_tag }}.yaml:/home/builder/config.yaml:z \
         {{ ochami_x86_64_image | join(' ') }} \
         {{ ochami_base_command | join(' ') }} \
-        2>&1 | /usr/bin/tee '{{ openchami_log_dir }}/{{ item.key }}{{ compute_image_suffix }}_compute_image.log'
+        > '{{ openchami_log_dir }}/{{ item.key }}{{ compute_image_suffix }}_compute_image.log' 2>&1
   async: 3600
   poll: 0
   loop: "{{ compute_images_dict | dict2items }}"
