@@ -168,10 +168,19 @@
         prior_rollback: "{{ prior_rollback_raw.content | b64decode | from_yaml }}"
       when: existing_rollback.stat.exists
 
+    - name: Ensure archive directory exists
+      ansible.builtin.file:
+        path: /opt/omnia/.data/archive
+        state: directory
+        mode: '0755'
+      when:
+        - existing_rollback.stat.exists
+        - prior_rollback.rollback_status | default('') == 'completed'
+
     - name: Archive stale completed rollback_manifest.yml
       ansible.builtin.copy:
         src: "{{ rollback_manifest_path }}"
-        dest: "{{ rollback_manifest_path }}.{{ prior_rollback.rollback_id | default('prev') }}"
+        dest: "/opt/omnia/.data/archive/rollback_manifest.{{ prior_rollback.rollback_id | default('prev') }}.yml"
         remote_src: true
         mode: '0644'
       when:
@@ -323,10 +332,19 @@
       register: upgrade_manifest_stat
       when: new_status == 'completed'
 
+    - name: Ensure archive directory exists (finalization)
+      ansible.builtin.file:
+        path: /opt/omnia/.data/archive
+        state: directory
+        mode: '0755'
+      when:
+        - new_status == 'completed'
+        - upgrade_manifest_stat.stat.exists
+
     - name: Archive the stale upgrade_manifest.yml (only on full rollback)
       ansible.builtin.copy:
         src: "{{ upgrade_manifest_path }}"
-        dest: "{{ upgrade_manifest_path }}.rolledback-{{ rollback_manifest.rollback_id }}"
+        dest: "/opt/omnia/.data/archive/upgrade_manifest.{{ rollback_manifest.rollback_id }}.rolledback.yml"
         remote_src: true
         mode: '0644'
       when:
