@@ -56,8 +56,9 @@
     metadata_path: /opt/omnia/.data/oim_metadata.yml
     upgrade_lock_path: /opt/omnia/.data/upgrade_in_progress.lock
     rollback_lock_path: /opt/omnia/.data/rollback_in_progress.lock
-    all_components: [oim, local_repo, build_image, k8s, telemetry, cloud_init_bss, slurm]
+    all_components: [oim, build_stream, local_repo, build_image, k8s, telemetry, cloud_init_bss, slurm]
     tag_dependencies:
+      build_stream: [oim]
       build_image: [oim]
       k8s: [oim]
       telemetry: [oim, k8s]
@@ -143,6 +144,7 @@
           backup_dir: "{{ oim_metadata.upgrade_backup_dir }}"
           component_status:
             oim: "pending"
+            build_stream: "pending"
             local_repo: "pending"
             build_image: "pending"
             k8s: "pending"
@@ -204,12 +206,48 @@
     omnia_metadata_support: true
 
 # ──────────────────────────────────────────────────────────────────────
+# BuildStream Terminal Gate (C-24): Read build_stream_config.yml and
+# set build_stream_terminal fact. When enable_build_stream=true AND
+# build_stream tag completes, downstream tags (local_repo, build_image,
+# k8s, cloud_init_bss, slurm) are skipped — the GitLab pipeline handles
+# those responsibilities.
+# ──────────────────────────────────────────────────────────────────────
+- name: Evaluate BuildStream terminal gate
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tags: always
+  tasks:
+    - name: Read build_stream_config.yml
+      ansible.builtin.include_vars:
+        file: "{{ input_project_dir }}/build_stream_config.yml"
+        name: build_stream_config
+      ignore_errors: true
+
+    - name: Determine BuildStream terminal gate
+      ansible.builtin.set_fact:
+        build_stream_terminal: "{{ build_stream_config.enable_build_stream | default(false) | bool }}"
+
+    - name: Report BuildStream terminal gate activation
+      ansible.builtin.debug:
+        msg: >
+          BuildStream is ENABLED (enable_build_stream=true).
+          Tags local_repo, build_image, k8s, cloud_init_bss, slurm will be
+          SKIPPED after build_stream completes. User must trigger GitLab
+          pipeline manually post-upgrade.
+      when: build_stream_terminal | bool
+
+# ──────────────────────────────────────────────────────────────────────
 # Sub-flow imports (each sub-flow reads upgrade_manifest.yml and
 # skips if its component_status is already 'completed')
 # ──────────────────────────────────────────────────────────────────────
 - name: Upgrade OIM tasks (includes OpenCHAMI)
   ansible.builtin.import_playbook: playbooks/upgrade_oim.yml
   tags: [oim]
+
+- name: BuildStream upgrade / enablement (terminal gate)
+  ansible.builtin.import_playbook: playbooks/upgrade_build_stream.yml
+  tags: [build_stream]
 
 - name: Local repo staging
   ansible.builtin.import_playbook: playbooks/upgrade_local_repo.yml
@@ -247,7 +285,7 @@
   vars:
     manifest_path: /opt/omnia/.data/upgrade_manifest.yml
     upgrade_lock_path: /opt/omnia/.data/upgrade_in_progress.lock
-    all_components: [oim, local_repo, build_image, k8s, telemetry, cloud_init_bss, slurm]
+    all_components: [oim, build_stream, local_repo, build_image, k8s, telemetry, cloud_init_bss, slurm]
   tasks:
     - name: Read current upgrade_manifest.yml
       ansible.builtin.slurp:
@@ -258,19 +296,32 @@
       ansible.builtin.set_fact:
         manifest: "{{ raw_manifest.content | b64decode | from_yaml }}"
 
-    - name: Clean up corrupted component_status values (reset all to 'completed')
+    # ── Identify tags skipped by BuildStream terminal gate ──
+    - name: Identify BuildStream-skipped components
+      ansible.builtin.set_fact:
+        bs_skipped_tags: "{{ ['local_repo', 'build_image', 'k8s', 'cloud_init_bss', 'slurm']
+                             if (hostvars['localhost']['build_stream_terminal'] | default(false) | bool
+                                 and manifest.component_status.build_stream | default('pending') == 'completed')
+                             else [] }}"
+
+    - name: Build cleaned component_status (mark skipped or completed)
       ansible.builtin.set_fact:
         cleaned_component_status: >-
-          {{ manifest.component_status
-             | dict2items
-             | map('combine', {'value': 'completed'})
-             | items2dict }}
+          {%- set result = {} -%}
+          {%- for key, val in manifest.component_status.items() -%}
+          {%-   if key in bs_skipped_tags and val == 'pending' -%}
+          {%-     set _ = result.update({key: 'skipped'}) -%}
+          {%-   else -%}
+          {%-     set _ = result.update({key: val if val in ['completed', 'skipped'] else 'completed'}) -%}
+          {%-   endif -%}
+          {%- endfor -%}
+          {{ result }}
 
     - name: Determine upgrade_status based on component_status
       ansible.builtin.set_fact:
         new_status: >-
           {{ 'completed'
-             if (cleaned_component_status.values() | unique | list == ['completed'])
+             if (cleaned_component_status.values() | reject('in', ['completed', 'skipped']) | list | length == 0)
              else 'partial' }}
 
     - name: Write upgrade_manifest.yml with cleaned component_status and updated upgrade_status
@@ -303,6 +354,7 @@
           - ""
           - "Component Status:"
           - "  oim:            {{ cleaned_component_status.oim | default('pending') }}"
+          - "  build_stream:   {{ cleaned_component_status.build_stream | default('pending') }}"
           - "  local_repo:     {{ cleaned_component_status.local_repo | default('pending') }}"
           - "  build_image:    {{ cleaned_component_status.build_image | default('pending') }}"
           - "  k8s:            {{ cleaned_component_status.k8s | default('pending') }}"

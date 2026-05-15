@@ -45,7 +45,7 @@
     rollback_manifest_path: /opt/omnia/.data/rollback_manifest.yml
     upgrade_lock_path: /opt/omnia/.data/upgrade_in_progress.lock
     rollback_lock_path: /opt/omnia/.data/rollback_in_progress.lock
-    all_rollback_components: [slurm, cloud_init_bss, telemetry, k8s, oim]
+    all_rollback_components: [slurm, cloud_init_bss, telemetry, build_stream, k8s, oim]
   tasks:
     # ─── Lock check: fail ONLY on upgrade lock; ignore rollback lock ───
     - name: Check for active upgrade lock
@@ -126,6 +126,23 @@
         upgrade_manifest: "{{ raw_upgrade_manifest.content | b64decode | from_yaml }}"
       when: upgrade_manifest_pre_stat.stat.exists
 
+    # ─── Fail if upgrade completed successfully (ESpec §3.2) ───
+    # Rollback after a successful upgrade is not recommended.
+    # Bypass with: -e force_rollback=true
+    - name: Abort rollback if upgrade completed successfully
+      ansible.builtin.fail:
+        msg: |
+          The previous upgrade completed successfully (upgrade_status: completed).
+          Rollback after a successful upgrade is not recommended because all
+          components were upgraded consistently.
+
+          If you need to rollback despite successful completion:
+            ansible-playbook rollback/rollback.yml -e force_rollback=true
+      when:
+        - upgrade_manifest is defined
+        - upgrade_manifest.upgrade_status | default('') == 'completed'
+        - not (force_rollback | default(false) | bool)
+
     - name: Resolve requested tags (handle Ansible 'all' default)
       ansible.builtin.set_fact:
         requested_tags: >-
@@ -188,6 +205,7 @@
             slurm: "pending"
             cloud_init_bss: "pending"
             telemetry: "pending"
+            build_stream: "pending"
             k8s: "pending"
             oim: "pending"
         dest: "{{ rollback_manifest_path }}"
@@ -227,6 +245,10 @@
   ansible.builtin.import_playbook: playbooks/rollback_telemetry.yml
   tags: [telemetry]
 
+- name: Rollback BuildStream upgrade / enablement
+  ansible.builtin.import_playbook: playbooks/rollback_build_stream.yml
+  tags: [build_stream]
+
 - name: Rollback Kubernetes cluster
   ansible.builtin.import_playbook: playbooks/rollback_k8s.yml
   tags: [k8s]
@@ -248,7 +270,7 @@
     rollback_manifest_path: /opt/omnia/.data/rollback_manifest.yml
     upgrade_manifest_path: /opt/omnia/.data/upgrade_manifest.yml
     rollback_lock_path: /opt/omnia/.data/rollback_in_progress.lock
-    all_rollback_components: [slurm, cloud_init_bss, telemetry, k8s, oim]
+    all_rollback_components: [slurm, cloud_init_bss, telemetry, build_stream, k8s, oim]
   tasks:
     - name: Read rollback_manifest.yml
       ansible.builtin.slurp:
@@ -344,6 +366,7 @@
           - "  slurm:          {{ cleaned_component_status.slurm }}"
           - "  cloud_init_bss: {{ cleaned_component_status.cloud_init_bss }}"
           - "  telemetry:      {{ cleaned_component_status.telemetry }}"
+          - "  build_stream:   {{ cleaned_component_status.build_stream }}"
           - "  k8s:            {{ cleaned_component_status.k8s }}"
           - "  oim:            {{ cleaned_component_status.oim }}"
           - ""
