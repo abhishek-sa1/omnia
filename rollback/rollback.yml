@@ -230,14 +230,35 @@
       ansible.builtin.set_fact:
         rollback_manifest: "{{ raw_rollback_manifest.content | b64decode | from_yaml }}"
 
-    # ─── BuildStream terminal gate detection for rollback ───
-    # If BuildStream was enabled during upgrade and downstream components
-    # were skipped (never upgraded), they must also be skipped during rollback.
+
+# ──────────────────────────────────────────────────────────────────────
+# Include input project directory (sets input_project_dir fact)
+# Note: import_playbook does NOT honor play-level when:; the conditional
+# must be inside the imported playbook itself. tags: always ensures it
+# runs even with --tags <component>.
+# ──────────────────────────────────────────────────────────────────────
+- name: Include input project directory
+  ansible.builtin.import_playbook: ../utils/include_input_dir.yml
+  tags: always
+  vars:
+    openchami_vars_suppport: false
+    omnia_metadata_support: true
+
+
+ # ─── BuildStream terminal gate detection for rollback ───
+# If BuildStream was enabled during upgrade and downstream components
+# were skipped (never upgraded), they must also be skipped during rollback.
+# Note: input_project_dir is set by include_input_dir.yml import above.
+- name: Evaluate BuildStream terminal gate
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tags: always
+  tasks:
     - name: Read build_stream_config.yml for terminal gate detection
       ansible.builtin.include_vars:
-        file: "{{ oim_metadata.input_project_dir | default('/opt/omnia/input') }}/build_stream_config.yml"
+        file: "{{ input_project_dir }}/build_stream_config.yml"
         name: build_stream_config
-      ignore_errors: true
 
     - name: Determine BuildStream terminal gate for rollback
       ansible.builtin.set_fact:
