@@ -230,6 +230,38 @@
       ansible.builtin.set_fact:
         rollback_manifest: "{{ raw_rollback_manifest.content | b64decode | from_yaml }}"
 
+    # ─── BuildStream terminal gate detection for rollback ───
+    # If BuildStream was enabled during upgrade and downstream components
+    # were skipped (never upgraded), they must also be skipped during rollback.
+    - name: Read build_stream_config.yml for terminal gate detection
+      ansible.builtin.include_vars:
+        file: "{{ oim_metadata.input_project_dir | default('/opt/omnia/input') }}/build_stream_config.yml"
+        name: build_stream_config
+      ignore_errors: true
+
+    - name: Determine BuildStream terminal gate for rollback
+      ansible.builtin.set_fact:
+        build_stream_terminal: >-
+          {{ (build_stream_config.enable_build_stream | default(false) | bool)
+             and (upgrade_manifest is defined)
+             and (upgrade_manifest.component_status is defined)
+             and (upgrade_manifest.component_status.build_stream | default('pending') in ['completed', 'skipped']) }}
+
+    - name: Identify components skipped by BuildStream terminal gate
+      ansible.builtin.set_fact:
+        bs_rollback_skipped: >-
+          {{ ['slurm', 'cloud_init_bss', 'telemetry', 'k8s']
+             if (build_stream_terminal | bool)
+             else [] }}
+
+    - name: Report BuildStream terminal gate activation (rollback)
+      ansible.builtin.debug:
+        msg: >
+          BuildStream terminal gate is active for rollback.
+          Components {{ bs_rollback_skipped | join(', ') }} were never upgraded
+          and will be SKIPPED during rollback. Only build_stream and oim will be rolled back.
+      when: build_stream_terminal | bool
+
     - name: Report already-rolled-back components (will be skipped)
       ansible.builtin.debug:
         msg: "Component '{{ item }}' already rolled back — will be skipped."
@@ -290,14 +322,18 @@
       ansible.builtin.set_fact:
         rollback_manifest: "{{ raw_rollback_manifest.content | b64decode | from_yaml }}"
 
-    # FIX 1: Kept your original {% set %} approach but emit JSON so it can be
-    #        coerced back into a real dict (instead of a string).
-    - name: Clean up corrupted component_status values (reset all to 'completed')
+    # Build cleaned component_status: preserve 'skipped' for BuildStream-gated
+    # components; mark everything else as 'completed'.
+    - name: Build cleaned component_status (mark skipped or completed)
       ansible.builtin.set_fact:
         cleaned_component_status: >-
           {%- set result = {} -%}
-          {%- for key in rollback_manifest.component_status.keys() -%}
-          {%- set _ = result.update({key: 'completed'}) -%}
+          {%- for key, val in rollback_manifest.component_status.items() -%}
+          {%-   if val == 'skipped' -%}
+          {%-     set _ = result.update({key: 'skipped'}) -%}
+          {%-   else -%}
+          {%-     set _ = result.update({key: val if val in ['completed', 'skipped'] else 'completed'}) -%}
+          {%-   endif -%}
           {%- endfor -%}
           {{ result | to_json }}
 
@@ -305,14 +341,12 @@
       ansible.builtin.set_fact:
         cleaned_component_status: "{{ cleaned_component_status | from_json }}"
 
-    # FIX 2: Moved AFTER cleanup and now reads cleaned_component_status
-    #        instead of the still-corrupted manifest values.
-    - name: Determine rollback_status
+    - name: Determine rollback_status (treat 'skipped' as acceptable for 'completed')
       ansible.builtin.set_fact:
         new_status: >-
           {{ 'completed'
              if (cleaned_component_status.values()
-                 | unique | list == ['completed'])
+                 | reject('in', ['completed', 'skipped']) | list | length == 0)
              else 'partial' }}
 
     - name: Write finalized rollback_manifest.yml with cleaned component_status
