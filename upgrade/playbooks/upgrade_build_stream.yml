@@ -147,7 +147,7 @@
           - ""
           - "  The pipeline will handle:"
           - "    - Local repo sync"
-          - "    - SquashFS image building"
+          - "    - OS image building"
           - "    - BSS/cloud-init configuration"
           - "    - K8s and Slurm cluster deployment"
           - ""
