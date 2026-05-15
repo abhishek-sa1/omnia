@@ -155,8 +155,11 @@
         path: "{{ rollback_manifest_path }}"
       register: existing_rollback
 
-    # If a previous rollback completed successfully, archive the stale
-    # rollback manifest so this run starts fresh.
+    # ─── Fail if previous rollback already completed (rerun guard) ───
+    # Prevents accidental re-execution after a successful rollback.
+    # The stale rollback_manifest.yml is archived by upgrade.yml pre-flight
+    # when a new upgrade cycle starts — not by rollback.yml itself.
+    # Bypass with: -e force_rollback=true
     - name: Read existing rollback manifest to check status (if present)
       ansible.builtin.slurp:
         src: "{{ rollback_manifest_path }}"
@@ -168,37 +171,23 @@
         prior_rollback: "{{ prior_rollback_raw.content | b64decode | from_yaml }}"
       when: existing_rollback.stat.exists
 
-    - name: Ensure archive directory exists
-      ansible.builtin.file:
-        path: /opt/omnia/.data/archive
-        state: directory
-        mode: '0755'
+    - name: Abort if rollback already completed
+      ansible.builtin.fail:
+        msg: |
+          The previous rollback already completed successfully (rollback_status: completed).
+          Rollback ID: {{ prior_rollback.rollback_id | default('N/A') }}
+          Source: {{ prior_rollback.source_version | default('N/A') }} → Target: {{ prior_rollback.target_version | default('N/A') }}
+
+          Re-running rollback after successful completion is not allowed.
+          The rollback manifest will be archived automatically when the next
+          upgrade cycle starts (upgrade.yml pre-flight).
+
+          If you need to force a new rollback:
+            ansible-playbook rollback/rollback.yml -e force_rollback=true
       when:
         - existing_rollback.stat.exists
         - prior_rollback.rollback_status | default('') == 'completed'
-
-    - name: Archive stale completed rollback_manifest.yml
-      ansible.builtin.copy:
-        src: "{{ rollback_manifest_path }}"
-        dest: "/opt/omnia/.data/archive/rollback_manifest.{{ prior_rollback.rollback_id | default('prev') }}.yml"
-        remote_src: true
-        mode: '0644'
-      when:
-        - existing_rollback.stat.exists
-        - prior_rollback.rollback_status | default('') == 'completed'
-
-    - name: Remove stale completed rollback_manifest.yml
-      ansible.builtin.file:
-        path: "{{ rollback_manifest_path }}"
-        state: absent
-      when:
-        - existing_rollback.stat.exists
-        - prior_rollback.rollback_status | default('') == 'completed'
-
-    - name: Re-check rollback_manifest.yml after possible cleanup
-      ansible.builtin.stat:
-        path: "{{ rollback_manifest_path }}"
-      register: existing_rollback
+        - not (force_rollback | default(false) | bool)
 
     # ─── Initialize rollback_manifest.yml using oim_metadata as source-of-truth ───
     - name: Initialize rollback_manifest.yml (first invocation)
