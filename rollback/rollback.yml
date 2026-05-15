@@ -273,7 +273,7 @@
       loop: "{{ requested_tags }}"
       when:
         - rollback_manifest.component_status[item] is defined
-        - rollback_manifest.component_status[item] == 'completed'
+        - rollback_manifest.component_status[item] in ['completed', 'skipped']
 
 # ──────────────────────────────────────────────────────────────────────
 # Rollback sub-flows (reverse order; each reads rollback_manifest
@@ -431,3 +431,18 @@
           - ""
           - "NEXT STEP: Run 'sudo ./omnia.sh --rollback' on the OIM host"
           - "to complete the core container rollback."
+
+# ──────────────────────────────────────────────────────────────────────
+# Guaranteed terminal cleanup (C-30) — defense-in-depth against
+# sub-playbook fatal errors that skip the finalize play above.
+# ──────────────────────────────────────────────────────────────────────
+- name: Guaranteed rollback lock cleanup
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tags: always
+  tasks:
+    - name: Ensure rollback lock removed (terminal safety net)
+      ansible.builtin.file:
+        path: /opt/omnia/.data/rollback_in_progress.lock
+        state: absent

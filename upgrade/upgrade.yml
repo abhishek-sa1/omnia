@@ -267,6 +267,7 @@
         - manifest.component_status is defined
         - item in manifest.component_status
         - manifest.component_status[item] == 'completed'
+        - manifest.component_status[item] in ['completed', 'skipped']
 
 # Note: import_playbook does NOT honor play-level when:; the conditional
 # must be inside the imported playbook itself. tags: always ensures it
@@ -282,7 +283,7 @@
 # BuildStream Terminal Gate (C-24): Read build_stream_config.yml and
 # set build_stream_terminal fact. When enable_build_stream=true AND
 # build_stream tag completes, downstream tags (local_repo, build_image,
-# k8s, cloud_init_bss, slurm) are skipped — the GitLab pipeline handles
+# k8s, telemetry, cloud_init_bss, slurm) are skipped — the GitLab pipeline handles
 # those responsibilities.
 # ──────────────────────────────────────────────────────────────────────
 - name: Evaluate BuildStream terminal gate
@@ -450,10 +451,11 @@
         - stale_rollback_stat.stat is defined
         - stale_rollback_stat.stat.exists
 
-    - name: Remove upgrade guard lock (always release at end)
+    - name: Remove upgrade guard lock (only when fully completed)
       ansible.builtin.file:
         path: "{{ upgrade_lock_path }}"
         state: absent
+      when: new_status == 'completed'
 
     - name: Display upgrade summary
       ansible.builtin.debug:
@@ -473,3 +475,18 @@
           - "  telemetry:      {{ cleaned_component_status.telemetry | default('pending') }}"
           - "  cloud_init_bss: {{ cleaned_component_status.cloud_init_bss | default('pending') }}"
           - "  slurm:          {{ cleaned_component_status.slurm | default('pending') }}"
+
+# ──────────────────────────────────────────────────────────────────────
+# Guaranteed terminal cleanup (C-30) — defense-in-depth against
+# sub-playbook fatal errors that skip the finalize play above.
+# ──────────────────────────────────────────────────────────────────────
+- name: Guaranteed upgrade lock cleanup
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tags: always
+  tasks:
+    - name: Ensure upgrade lock removed (terminal safety net)
+      ansible.builtin.file:
+        path: /opt/omnia/.data/upgrade_in_progress.lock
+        state: absent
