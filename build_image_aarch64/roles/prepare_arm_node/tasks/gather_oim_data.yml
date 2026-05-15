@@ -88,7 +88,7 @@
 
 - name: Set baseos repo section name
   ansible.builtin.set_fact:
-    baseos_section_name: "aarch64_{{ sw_config.cluster_os_type }}_{{ sw_config.cluster_os_version }}_baseos"
+    baseos_section_name: "x86_64_{{ sw_config.cluster_os_type }}_{{ sw_config.cluster_os_version }}_baseos"
 
 # Read pulp.repo file
 - name: Read pulp.repo content

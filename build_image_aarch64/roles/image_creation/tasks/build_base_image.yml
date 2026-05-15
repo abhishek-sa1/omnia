@@ -16,7 +16,7 @@
 - name: Set base image suffix when build stream inputs present
   ansible.builtin.set_fact:
     base_image_suffix: "_{{ build_stream_job_id }}-{{ image_key | default('') }}"
-    rhel_base_image_name: "{{ rhel_aarch64_base_image_name }}_{{ build_stream_job_id }}-{{ image_key | default('') }}"
+    rhel_base_image_name: "{{ rhel_x86_64_base_image_name }}_{{ build_stream_job_id }}-{{ image_key | default('') }}"
   when:
     - enable_build_stream | bool
     - (build_stream_job_id | default('') | length) > 0
@@ -41,7 +41,7 @@
 - name: Render aarch64 base image build config
   ansible.builtin.template:
     src: "{{ role_path }}/templates/images/rhel-base-config.yaml.j2"
-    dest: "{{ openchami_work_dir }}/images/{{ rhel_aarch64_base_image_name }}-{{ rhel_tag }}.yaml"
+    dest: "{{ openchami_work_dir }}/images/{{ rhel_x86_64_base_image_name }}-{{ rhel_tag }}.yaml"
     mode: "{{ dir_permissions_644 }}"
   delegate_to: "{{ aarch64_build_host }}"
   connection: ssh
@@ -84,8 +84,8 @@
 
     - name: Fail if aarch64 base osimage not created
       ansible.builtin.fail:
-        msg: "Failed to build base osimage {{ oim_node_name }}/{{ rhel_aarch64_base_image_name }}"
-      when: (oim_node_name + '/' + rhel_aarch64_base_image_name) not in verify_base_osimage.stdout_lines
+        msg: "Failed to build base osimage {{ oim_node_name }}/{{ rhel_x86_64_base_image_name }}"
+      when: (oim_node_name + '/' + rhel_x86_64_base_image_name) not in verify_base_osimage.stdout_lines
 
     - name: Verify aarch64 base osimage output
       ansible.builtin.debug:

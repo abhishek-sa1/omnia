@@ -21,14 +21,14 @@
       register: pulp_endpoints
       changed_when: false
 
-    - name: Filter only aarch_64 distributions
+    - name: Filter only x86_64 distributions
       ansible.builtin.set_fact:
         pulp_aarch_64_distributions: >-
           {{ pulp_endpoints.stdout | from_json
-            | selectattr('name', 'match', '^aarch64')
+            | selectattr('name', 'match', '^x86_64')
             | list }}
 
-    - name: Build rhel_repos list from pulp_aarch_64_distributions
+    - name: Build rhel_repos list from pulp x86_64 distributions
       ansible.builtin.set_fact:
         rhel_aarch64_repos: >-
           {{ pulp_aarch_64_distributions | map('combine', {'gpg': ''}) | list }}

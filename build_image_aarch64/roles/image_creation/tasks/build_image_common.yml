@@ -23,13 +23,15 @@
       ansible.builtin.fail:
         msg: "{{ storage_config_syntax_fail_msg }} Error: {{ storge_config_include.message }}"
 
-- name: Set facts for aarch64 image templates vars
+- name: Set facts for image templates vars (using x86_64 data for testing)
   ansible.builtin.set_fact:
     rhel_tag: "{{ hostvars['localhost']['rhel_tag'] }}"
     oim_node_name: "{{ hostvars['localhost']['oim_node_name'] }}"
     domain_name: "{{ hostvars['localhost']['domain_name'] }}"
     rhel_aarch64_repos: "{{ hostvars['localhost']['rhel_aarch64_repos'] }}"
     aarch64_base_image_packages: "{{ hostvars['localhost']['aarch64_base_image_packages'] }}"
+    rhel_x86_64_repos: "{{ hostvars['localhost']['rhel_aarch64_repos'] }}"
+    x86_64_base_image_packages: "{{ hostvars['localhost']['aarch64_base_image_packages'] }}"
     compute_images_dict: "{{ hostvars['localhost']['compute_images_dict'] }}"
 
 - name: Normalize build stream inputs for base image
