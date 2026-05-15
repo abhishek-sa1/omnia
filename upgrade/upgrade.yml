@@ -65,7 +65,11 @@
       cloud_init_bss: [oim]
       slurm: [oim, k8s]
   tasks:
-    # ─── Lock check: fail ONLY on rollback lock; ignore upgrade lock ───
+    # ═══════════════════════════════════════════════════════════════
+    # PHASE 1: READ-ONLY GUARDS (no state mutation allowed here)
+    # ═══════════════════════════════════════════════════════════════
+
+    # ─── Guard 1: Rollback lock check ───
     - name: Check for active rollback lock
       ansible.builtin.stat:
         path: "{{ rollback_lock_path }}"
@@ -85,11 +89,45 @@
           Lock file: {{ rollback_lock_path }}
           Lock contents:
           {{ (rollback_lock_raw.content | b64decode) if (rollback_lock_raw.content is defined) else '(unreadable)' }}
-
           Wait for the rollback to finish, or if no process is actually
           running (e.g., previous run crashed), manually remove the lock:
             rm {{ rollback_lock_path }}
       when: rollback_lock_stat.stat.exists
+
+    # ─── Guard 2: Manifest read + completed-upgrade check ───
+    - name: Check for upgrade_manifest.yml
+      ansible.builtin.stat:
+        path: "{{ manifest_path }}"
+      register: manifest_stat
+
+    - name: Read existing upgrade_manifest.yml (for guard check)
+      ansible.builtin.slurp:
+        src: "{{ manifest_path }}"
+      register: existing_manifest_raw
+      when: manifest_stat.stat.exists
+
+    - name: Parse existing manifest (for guard check)
+      ansible.builtin.set_fact:
+        existing_manifest: "{{ existing_manifest_raw.content | b64decode | from_yaml }}"
+      when: manifest_stat.stat.exists
+
+    - name: Abort if upgrade already completed
+      ansible.builtin.fail:
+        msg: |
+          The previous upgrade already completed successfully (upgrade_status: completed).
+          Upgrade ID: {{ existing_manifest.upgrade_id | default('N/A') }}
+          Source: {{ existing_manifest.source_version | default('N/A') }} → Target: {{ existing_manifest.target_version | default('N/A') }}
+          Re-running upgrade after successful completion is not allowed.
+          If you need to force a new upgrade cycle:
+            ansible-playbook upgrade/upgrade.yml -e force_upgrade=true
+      when:
+        - manifest_stat.stat.exists
+        - existing_manifest.upgrade_status | default('') == 'completed'
+        - not (force_upgrade | default(false) | bool)
+
+    # ═══════════════════════════════════════════════════════════════
+    # PHASE 2: STATE MUTATION (only reached if all guards passed)
+    # ═══════════════════════════════════════════════════════════════
 
     - name: Ensure .data directory exists
       ansible.builtin.file:
@@ -116,11 +154,6 @@
         mode: '0644'
       when: not upgrade_lock_stat.stat.exists
     # ─────────────────────────────────────────────────────────────
-
-    - name: Check for upgrade_manifest.yml
-      ansible.builtin.stat:
-        path: "{{ manifest_path }}"
-      register: manifest_stat
 
     # ─── Read oim_metadata.yml and derive manifest fields directly ───
     - name: Read oim_metadata.yml
@@ -155,7 +188,7 @@
         mode: '0644'
       when: not manifest_stat.stat.exists
 
-    - name: Read upgrade_manifest.yml
+    - name: Read upgrade_manifest.yml (final canonical version)
       ansible.builtin.slurp:
         src: "{{ manifest_path }}"
       register: raw_manifest
@@ -163,23 +196,6 @@
     - name: Parse manifest
       ansible.builtin.set_fact:
         manifest: "{{ raw_manifest.content | b64decode | from_yaml }}"
-
-    # ─── Fail if previous upgrade already completed (rerun guard) ───
-    # Prevents accidental re-execution after a successful upgrade.
-    # Bypass with: -e force_upgrade=true
-    - name: Abort if upgrade already completed
-      ansible.builtin.fail:
-        msg: |
-          The previous upgrade already completed successfully (upgrade_status: completed).
-          Upgrade ID: {{ manifest.upgrade_id | default('N/A') }}
-          Source: {{ manifest.source_version | default('N/A') }} → Target: {{ manifest.target_version | default('N/A') }}
-
-          Re-running upgrade after successful completion is not allowed.
-          If you need to force a new upgrade cycle, archive the manifest first:
-            ansible-playbook upgrade/upgrade.yml -e force_upgrade=true
-      when:
-        - manifest.upgrade_status | default('') == 'completed'
-        - not (force_upgrade | default(false) | bool)
 
     # ─── Archive stale rollback_manifest.yml in pre-flight ───
     # If a rollback manifest exists from a prior cycle, archive it so
