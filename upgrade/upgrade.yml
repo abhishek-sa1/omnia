@@ -266,7 +266,6 @@
       when:
         - manifest.component_status is defined
         - item in manifest.component_status
-        - manifest.component_status[item] == 'completed'
         - manifest.component_status[item] in ['completed', 'skipped']
 
 # Note: import_playbook does NOT honor play-level when:; the conditional
