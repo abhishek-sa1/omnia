@@ -22,7 +22,7 @@
   ansible.builtin.set_fact:
     fg_aarch64: >-
       {{ functional_group_cfg.functional_groups
-         | selectattr('name', 'search', '_aarch64$')
+         | selectattr('name', 'search', '_x86_64$')
          | list
          | length > 0 }}
     cacheable: true

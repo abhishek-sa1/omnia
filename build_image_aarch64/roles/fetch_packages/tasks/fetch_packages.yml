@@ -62,7 +62,7 @@
           {{
             compute_images_output.compute_images_dict
             | dict2items
-            | selectattr('key', 'search', '_aarch64$')
+            | selectattr('key', 'search', '_x86_64$')
             | items2dict
           }}
 
