@@ -1,0 +1,18 @@
+{#- Additional cloud-init packages injection partial -#}
+{#- Requires: _aci_phase ('pre' or 'post'), functional_group_name -#}
+{#- Pre phase: common + pre per-FG. Post phase: post per-FG only. -#}
+{#- Use inside an existing packages: section in a FG template -#}
+{%- if additional_cloud_init_enabled | default(false) | bool -%}
+{%- if _aci_phase == 'pre' -%}
+{%- set _aci_c_data = additional_cloud_init_common_data | default({}) -%}
+{%- set _aci_g_all = additional_cloud_init_pre_groups_data | default({}) -%}
+{%- else -%}
+{%- set _aci_c_data = {} -%}
+{%- set _aci_g_all = additional_cloud_init_post_groups_data | default({}) -%}
+{%- endif -%}
+{%- set _aci_g_data = _aci_g_all[functional_group_name] if functional_group_name in _aci_g_all else {} -%}
+{%- set _aci_pkgs = (_aci_c_data.packages | default([])) + (_aci_g_data.packages | default([])) -%}
+{% for pkg in _aci_pkgs %}
+        - {{ pkg }}
+{% endfor %}
+{%- endif -%}

@@ -222,7 +222,7 @@ ADDITIONAL_CLOUD_INIT_NOT_DICT_MSG = (
     "additional cloud-init config file must contain a YAML mapping."
 )
 ADDITIONAL_CLOUD_INIT_UNKNOWN_TOP_KEY_MSG = (
-    "Unknown top-level key. Only 'common' and 'groups' are allowed."
+    "Unknown top-level key. Only 'common', 'pre', and 'post' are allowed."
 )
 ADDITIONAL_CLOUD_INIT_PROHIBITED_KEY_MSG = (
     "Prohibited key found. The keys 'bootcmd', 'network', and "
@@ -247,7 +247,7 @@ ADDITIONAL_CLOUD_INIT_PACKAGES_NOT_STRING_MSG = (
     "packages entry is not a string."
 )
 ADDITIONAL_CLOUD_INIT_INVALID_FG_MSG = (
-    "is not a valid functional group name in the 'groups' section."
+    "is not a valid functional group name in the 'pre'/'post' section."
 )
 ADDITIONAL_CLOUD_INIT_SECTION_NOT_DICT_MSG = (
     "Section must be a mapping/dict."

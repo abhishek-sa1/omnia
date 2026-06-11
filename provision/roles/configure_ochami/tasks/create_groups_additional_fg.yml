@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
-# Creates an SMD group for per-functional-group additional cloud-init.
+# DEPRECATED: This file is no longer used. Additional cloud-init content is now
+# injected directly into FG templates via partials (aci_write_files.j2, etc.).
+# Safe to delete once confirmed no external references remain.
+#
+# Previously: Creates an SMD group for per-functional-group additional cloud-init.
 # The group name is prefixed with additional_cloud_init_ and contains
 # only nodes belonging to the target functional group.
 

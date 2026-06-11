@@ -1114,9 +1114,10 @@ def validate_additional_cloud_init_config(config_file_path, pxe_mapping_file_pat
 
     Checks:
       - File exists and is valid YAML
-      - Top-level keys are only 'common' and 'groups'
-      - Per-section: no prohibited keys, only allowed keys, type checks
-      - Group names match functional groups from pxe_mapping_file
+      - Top-level keys are only 'common', 'pre', and 'post'
+      - common: flat section (write_files, packages, runcmd) — no pre/post
+      - pre/post: per-FG dicts, each FG section validated for allowed keys
+      - FG names in pre/post match functional groups from pxe_mapping_file
 
     Args:
         config_file_path (str): Path to additional_cloud_init config file.
@@ -1158,7 +1159,7 @@ def validate_additional_cloud_init_config(config_file_path, pxe_mapping_file_pat
         ))
         return errors
 
-    top_level_keys = ["common", "groups"]
+    top_level_keys = ["common", "pre", "post"]
     for key in config_data:
         if key not in top_level_keys:
             errors.append(create_error_msg(
@@ -1167,27 +1168,35 @@ def validate_additional_cloud_init_config(config_file_path, pxe_mapping_file_pat
             ))
 
     common_data = config_data.get("common") or {}
-    groups_data = config_data.get("groups") or {}
+    pre_data = config_data.get("pre") or {}
+    post_data = config_data.get("post") or {}
 
     if common_data:
         errors.extend(_validate_cloud_init_section("common", common_data))
 
-    if groups_data:
-        if not isinstance(groups_data, dict):
+    valid_fg_names = _get_fg_names_from_mapping_file(pxe_mapping_file_path)
+
+    for phase_name, phase_data in [("pre", pre_data), ("post", post_data)]:
+        if not phase_data:
+            continue
+        if not isinstance(phase_data, dict):
             errors.append(create_error_msg(
-                "additional_cloud_init.groups", str(type(groups_data).__name__),
+                f"additional_cloud_init.{phase_name}",
+                str(type(phase_data).__name__),
                 en_us_validation_msg.ADDITIONAL_CLOUD_INIT_SECTION_NOT_DICT_MSG,
             ))
-        else:
-            valid_fg_names = _get_fg_names_from_mapping_file(pxe_mapping_file_path)
-            for fg_name, section_data in groups_data.items():
-                if valid_fg_names and fg_name not in valid_fg_names:
-                    errors.append(create_error_msg(
-                        f"additional_cloud_init.groups.{fg_name}", fg_name,
-                        en_us_validation_msg.ADDITIONAL_CLOUD_INIT_INVALID_FG_MSG,
-                    ))
-                if section_data:
-                    errors.extend(_validate_cloud_init_section(fg_name, section_data))
+            continue
+        for fg_name, section_data in phase_data.items():
+            if valid_fg_names and fg_name not in valid_fg_names:
+                errors.append(create_error_msg(
+                    f"additional_cloud_init.{phase_name}.{fg_name}",
+                    fg_name,
+                    en_us_validation_msg.ADDITIONAL_CLOUD_INIT_INVALID_FG_MSG,
+                ))
+            if section_data:
+                errors.extend(_validate_cloud_init_section(
+                    f"{phase_name}.{fg_name}", section_data
+                ))
 
     return errors
 

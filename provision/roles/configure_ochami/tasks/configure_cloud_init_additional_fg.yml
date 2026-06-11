@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
-# Renders and sets a single per-functional-group additional cloud-init group.
+# DEPRECATED: This file is no longer used. Additional cloud-init content is now
+# injected directly into FG templates via partials (aci_write_files.j2, etc.).
+# Safe to delete once confirmed no external references remain.
+#
+# Previously: Renders and sets a single per-functional-group additional cloud-init group.
 # Variables expected:
 #   _ci_fg_name - the functional group name (e.g. slurm_node_x86_64)
 

@@ -20,6 +20,7 @@
       disable_root: false
 
       write_files:
+{% set _aci_phase = 'pre' %}{% include 'cloud_init/partials/aci_write_files.j2' %}
         - path: /usr/local/bin/doca-install.sh
           owner: root:root
           permissions: '{{ file_mode_755 }}'
@@ -154,7 +155,11 @@
             {{ pv_entry.content | indent(12) }}
 {% endfor %}
 
+{% set _aci_phase = 'post' %}{% include 'cloud_init/partials/aci_write_files.j2' %}
+{% set _aci_phase = 'pre' %}{% include 'cloud_init/partials/aci_packages.j2' %}
+{% set _aci_phase = 'post' %}{% include 'cloud_init/partials/aci_packages.j2' %}
       runcmd:
+{% set _aci_phase = 'pre' %}{% include 'cloud_init/partials/aci_runcmd.j2' %}
         - /usr/local/bin/set-ssh.sh
         - "systemctl enable chronyd"
         - "systemctl restart chronyd"
@@ -361,3 +366,4 @@
             systemctl status kubelet
             echo "Cloud-Init finished successfully after the reboot."
           fi
+{% set _aci_phase = 'post' %}{% include 'cloud_init/partials/aci_runcmd.j2' %}

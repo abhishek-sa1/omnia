@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
-# Renders and sets additional cloud-init groups (common + per-functional-group).
+# DEPRECATED: This file is no longer used. Additional cloud-init content is now
+# injected directly into FG templates via partials (aci_write_files.j2, etc.).
+# Safe to delete once confirmed no external references remain.
+#
+# Previously: Renders and sets additional cloud-init groups (common + per-functional-group).
 # Common group is applied to ALL nodes; per-FG groups target specific functional groups.
 # Uses merge_how with no_replace so platform defaults always take precedence.
 

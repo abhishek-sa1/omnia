@@ -16,10 +16,15 @@
 # Additional cloud-init configuration for stateless node provisioning.
 #
 # Structure:
-#   common:    Applied to ALL nodes (common cloud-init group)
-#   groups:    Per-functional-group overrides (keyed by functional group name)
+#   common:  Applied to ALL functional groups (all nodes).
+#            Injected in the pre phase (before platform FG content).
+#            Does NOT support pre/post — it is always pre.
+#   pre:     Per-functional-group content injected BEFORE platform FG content.
+#            Keyed by functional group name.
+#   post:    Per-functional-group content injected AFTER platform FG content.
+#            Keyed by functional group name.
 #
-# ALLOWED keys per section (config and final stage only):
+# ALLOWED keys per section:
 #   write_files  - Write files to nodes (list of file entries)
 #   packages     - Install additional packages (list of package names)
 #   runcmd       - Run commands at final stage (list of commands)
@@ -28,12 +33,13 @@
 #   bootcmd, network, network-config
 #   These are platform-managed and must not be overridden by users.
 #
-# Merge behavior:
-#   Platform-defined defaults always take precedence (merge_how: no_replace).
-#   User entries are appended to platform lists (write_files, runcmd, packages).
-#   Group-specific entries are merged AFTER common entries.
-
-# Common cloud-init applied to ALL nodes
+# Ordering guarantee:
+#   Common content is injected BEFORE platform FG content (pre phase).
+#   Pre per-FG content is injected after common, still before platform.
+#   Post per-FG content is injected AFTER platform FG content.
+#   All content is embedded in the FG cloud-init document, so ordering is
+#   deterministic regardless of OpenCHAMI group merge order.
+#
 # Example:
 #   common:
 #     write_files:
@@ -44,22 +50,21 @@
 #       - htop
 #       - vim
 #     runcmd:
-#       - echo "Custom node setup complete" >> /var/log/custom_setup.log
+#       - echo "Common setup (all nodes)" >> /var/log/custom_setup.log
+#   pre:
+#     slurm_node_x86_64:
+#       runcmd:
+#         - echo "Pre-slurm setup" >> /var/log/custom_setup.log
+#   post:
+#     slurm_node_x86_64:
+#       runcmd:
+#         - echo "Post-slurm cleanup" >> /var/log/custom_setup.log
+
+# Common cloud-init applied to all functional groups (pre phase)
 common: {}
 
-# Per-functional-group cloud-init overrides
-# Group names must match functional groups defined in pxe_mapping_file.csv
-# Example:
-#   groups:
-#     slurm_node_x86_64:
-#       packages:
-#         - slurm-extra-plugin
-#       runcmd:
-#         - echo "Slurm node setup" >> /var/log/custom.log
-#     login_node_x86_64:
-#       write_files:
-#         - path: /etc/profile.d/cluster.sh
-#           content: |
-#             export CLUSTER_NAME=mycluster
-#           permissions: '0644'
-groups: {}
+# Per-FG content injected BEFORE platform FG content
+pre: {}
+
+# Per-FG content injected AFTER platform FG content
+post: {}

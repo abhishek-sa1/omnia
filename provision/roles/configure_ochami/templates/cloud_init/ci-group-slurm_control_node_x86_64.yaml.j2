@@ -24,6 +24,7 @@
       disable_root: false
 
       write_files:
+{% set _aci_phase = 'pre' %}{% include 'cloud_init/partials/aci_write_files.j2' %}
         - path: /usr/local/bin/doca-install.sh
           owner: root:root
           permissions: '{{ file_mode_755 }}'
@@ -284,7 +285,11 @@
           content: |
             {{ lookup('template', 'templates/nodes/apptainer_mirror.conf.j2') | indent(12) }}
 
+{% set _aci_phase = 'post' %}{% include 'cloud_init/partials/aci_write_files.j2' %}
+{% set _aci_phase = 'pre' %}{% include 'cloud_init/partials/aci_packages.j2' %}
+{% set _aci_phase = 'post' %}{% include 'cloud_init/partials/aci_packages.j2' %}
       runcmd:
+{% set _aci_phase = 'pre' %}{% include 'cloud_init/partials/aci_runcmd.j2' %}
         - /usr/local/bin/set-ssh.sh
         # DOCA prerequisites - moved early to ensure RDMA is ready before vendor_data mounts
         - mkdir -p {{ client_mount_path }}/slurm/ssh
@@ -404,3 +409,4 @@
         - systemctl restart slurmdbd
         - systemctl restart slurmctld
         - echo "Cloud-Init has completed successfully."
+{% set _aci_phase = 'post' %}{% include 'cloud_init/partials/aci_runcmd.j2' %}

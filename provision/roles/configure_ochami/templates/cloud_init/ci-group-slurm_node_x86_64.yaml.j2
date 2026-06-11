@@ -25,6 +25,7 @@
       disable_root: false
 
       write_files:
+{% set _aci_phase = 'pre' %}{% include 'cloud_init/partials/aci_write_files.j2' %}
         - path: /usr/local/bin/doca-install.sh
           owner: root:root
           permissions: '{{ file_mode_755 }}'
@@ -412,7 +413,11 @@
 {% endfor %}
 
 
+{% set _aci_phase = 'post' %}{% include 'cloud_init/partials/aci_write_files.j2' %}
+{% set _aci_phase = 'pre' %}{% include 'cloud_init/partials/aci_packages.j2' %}
+{% set _aci_phase = 'post' %}{% include 'cloud_init/partials/aci_packages.j2' %}
       runcmd:
+{% set _aci_phase = 'pre' %}{% include 'cloud_init/partials/aci_runcmd.j2' %}
         - /usr/local/bin/set-ssh.sh
         - /usr/local/bin/configure_vast_installation.sh
         # DOCA prerequisites - moved early to ensure RDMA is ready before vendor_data mounts
@@ -530,3 +535,4 @@
         - echo "Run /usr/local/bin/setup_nvhpc_sdk.sh to setup NVIDIA HPC SDK"
         - systemctl restart slurmd
         - echo "Cloud-Init has completed successfully."
+{% set _aci_phase = 'post' %}{% include 'cloud_init/partials/aci_runcmd.j2' %}

@@ -1,0 +1,48 @@
+{#- Additional cloud-init complete sections injection partial -#}
+{#- Use in FG templates that do NOT have existing write_files/runcmd/packages sections -#}
+{#- Renders complete sections with headers if any content exists -#}
+{#- Combines: common + pre per-FG + post per-FG (common has no pre/post split) -#}
+{#- Requires: functional_group_name -#}
+{%- if additional_cloud_init_enabled | default(false) | bool -%}
+{%- set _aci_c = additional_cloud_init_common_data | default({}) -%}
+{%- set _aci_pre_g_all = additional_cloud_init_pre_groups_data | default({}) -%}
+{%- set _aci_post_g_all = additional_cloud_init_post_groups_data | default({}) -%}
+{%- set _aci_pre_g = _aci_pre_g_all[functional_group_name] if functional_group_name in _aci_pre_g_all else {} -%}
+{%- set _aci_post_g = _aci_post_g_all[functional_group_name] if functional_group_name in _aci_post_g_all else {} -%}
+{#- Combine common + pre per-FG + post per-FG for each section type -#}
+{%- set _aci_wf = (_aci_c.write_files | default([])) + (_aci_pre_g.write_files | default([])) + (_aci_post_g.write_files | default([])) -%}
+{%- set _aci_pkgs = (_aci_c.packages | default([])) + (_aci_pre_g.packages | default([])) + (_aci_post_g.packages | default([])) -%}
+{%- set _aci_cmds = (_aci_c.runcmd | default([])) + (_aci_pre_g.runcmd | default([])) + (_aci_post_g.runcmd | default([])) -%}
+{% if _aci_wf | length > 0 %}
+      write_files:
+{% for wf in _aci_wf %}
+        - path: {{ wf.path }}
+{% if wf.permissions is defined %}
+          permissions: '{{ wf.permissions }}'
+{% endif %}
+{% if wf.owner is defined %}
+          owner: {{ wf.owner }}
+{% endif %}
+{% if wf.append is defined %}
+          append: {{ wf.append | lower }}
+{% endif %}
+{% if wf.encoding is defined %}
+          encoding: {{ wf.encoding }}
+{% endif %}
+          content: |
+            {{ wf.content | indent(12) }}
+{% endfor %}
+{% endif %}
+{% if _aci_pkgs | length > 0 %}
+      packages:
+{% for pkg in _aci_pkgs %}
+        - {{ pkg }}
+{% endfor %}
+{% endif %}
+{% if _aci_cmds | length > 0 %}
+      runcmd:
+{% for cmd in _aci_cmds %}
+        - {{ cmd }}
+{% endfor %}
+{% endif %}
+{%- endif -%}

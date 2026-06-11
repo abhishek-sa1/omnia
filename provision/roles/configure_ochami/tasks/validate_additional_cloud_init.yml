@@ -13,10 +13,11 @@
 # limitations under the License.
 ---
 # Loads user-provided additional cloud-init config and sets facts for
-# configure_cloud_init_additional.yml and create_groups_additional_fg.yml.
+# FG template partials (aci_write_files.j2, aci_runcmd.j2, etc.).
 # Input validation (prohibited keys, allowed keys, types, FG names) is
 # performed earlier in the L2 validation flow (provision_validation.py).
 # This file only parses the YAML and sets enabled/data facts.
+# The config has: common (flat, no pre/post), pre/post (per-FG groups only).
 
 - name: Read additional_cloud_init_config_file path
   ansible.builtin.set_fact:
@@ -26,11 +27,9 @@
 - name: Set defaults when additional cloud-init is disabled
   ansible.builtin.set_fact:
     additional_cloud_init_enabled: false
-    additional_cloud_init_common_enabled: false
-    additional_cloud_init_groups_enabled: false
     additional_cloud_init_common_data: {}
-    additional_cloud_init_groups_data: {}
-    additional_cloud_init_fg_names: []
+    additional_cloud_init_pre_groups_data: {}
+    additional_cloud_init_post_groups_data: {}
   when: additional_cloud_init_file_path == ''
 
 - name: Load additional cloud-init config
@@ -55,25 +54,25 @@
       ansible.builtin.set_fact:
         _aci_config: "{{ _aci_file_content.content | b64decode | from_yaml | default({}) }}"
 
-    - name: Extract common and groups data
+    - name: Extract common, pre, and post data
       ansible.builtin.set_fact:
         additional_cloud_init_common_data: "{{ _aci_config.common | default({}) }}"
-        additional_cloud_init_groups_data: "{{ _aci_config.groups | default({}) }}"
+        additional_cloud_init_pre_groups_data: "{{ _aci_config.pre | default({}) }}"
+        additional_cloud_init_post_groups_data: "{{ _aci_config.post | default({}) }}"
 
-    - name: Set enabled flags and FG name list
+    - name: Set enabled flag
       ansible.builtin.set_fact:
-        additional_cloud_init_common_enabled: "{{ additional_cloud_init_common_data | length > 0 }}"
-        additional_cloud_init_groups_enabled: "{{ additional_cloud_init_groups_data | length > 0 }}"
-        additional_cloud_init_fg_names: "{{ additional_cloud_init_groups_data.keys() | list }}"
         additional_cloud_init_enabled: >-
           {{ (additional_cloud_init_common_data | length > 0) or
-             (additional_cloud_init_groups_data | length > 0) }}
+             (additional_cloud_init_pre_groups_data | length > 0) or
+             (additional_cloud_init_post_groups_data | length > 0) }}
 
     - name: Log additional cloud-init load result
       ansible.builtin.debug:
         msg: >-
           additional_cloud_init loaded.
           File: {{ additional_cloud_init_oim_path }}.
-          Common enabled: {{ additional_cloud_init_common_enabled }}.
-          Groups enabled: {{ additional_cloud_init_groups_enabled }}.
-          FG names: {{ additional_cloud_init_fg_names }}.
+          Enabled: {{ additional_cloud_init_enabled }}.
+          Common keys: {{ additional_cloud_init_common_data.keys() | list }}.
+          Pre FGs: {{ additional_cloud_init_pre_groups_data.keys() | list }}.
+          Post FGs: {{ additional_cloud_init_post_groups_data.keys() | list }}.
