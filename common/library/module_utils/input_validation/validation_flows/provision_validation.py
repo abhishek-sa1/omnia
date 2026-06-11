@@ -1290,16 +1290,17 @@ def validate_provision_config(
             )
         )
 
-    kernel_version_override = data.get("kernel_version_override", "")
-    if kernel_version_override:
-        if not re.match(r"^[0-9]+\.[0-9]+\.[0-9]+-.+$", kernel_version_override):
-            errors.append(
-                create_error_msg(
-                    "kernel_version_override",
-                    kernel_version_override,
-                    en_us_validation_msg.KERNEL_VERSION_OVERRIDE_FAIL_MSG,
+    for kvo_field in ("kernel_version_override_x86_64", "kernel_version_override_aarch64"):
+        kvo_value = data.get(kvo_field, "")
+        if kvo_value:
+            if not re.match(r"^[0-9]+\.[0-9]+\.[0-9]+-.+$", kvo_value):
+                errors.append(
+                    create_error_msg(
+                        kvo_field,
+                        kvo_value,
+                        en_us_validation_msg.KERNEL_VERSION_OVERRIDE_FAIL_MSG,
+                    )
                 )
-            )
 
     # Validate additional cloud-init config file
     aci_path = data.get("additional_cloud_init_config_file", "")

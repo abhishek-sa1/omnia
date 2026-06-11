@@ -71,8 +71,8 @@ kernel_override_no_match_msg: >-
   (2) Run build_image_x86_64.yml/build_image_aarch64.yml to build and upload the new kernel image
   to s3://boot-images.
   (3) Re-run provision.yml.
-  Alternatively, set kernel_version_override to "" in provision_config.yml
-  to auto-select the latest available image.
+  Alternatively, set kernel_version_override_x86_64 or kernel_version_override_aarch64
+  to "" in provision_config.yml to auto-select the latest available image.
 
 # Usage: validate_telemetry.yml
 warning_idrac_telemetry_support_false: |

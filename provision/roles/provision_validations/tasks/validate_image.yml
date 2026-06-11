@@ -43,6 +43,13 @@
          and (hostvars['localhost']['service_k8s_version'] | default('') | length > 0)
          else '' }}
 
+- name: Resolve architecture-specific kernel_version_override
+  ansible.builtin.set_fact:
+    kernel_version_override: >-
+      {{ hostvars['localhost']['kernel_version_override_aarch64'] | default('')
+         if functional_group_name is search('_aarch64$')
+         else hostvars['localhost']['kernel_version_override_x86_64'] | default('') }}
+
 - name: Build image search pattern for S3 validation
   ansible.builtin.set_fact:
     image_search_pattern: >-
@@ -75,18 +82,18 @@
     initrd: "{{ verify_s3_image.stdout_lines | select('search', 'initramfs') | list | first }}"
   when:
     - verify_s3_image.stdout_lines | length > 1
-    - hostvars['localhost']['kernel_version_override'] | default('') | length == 0
+    - kernel_version_override | default('') | length == 0
 
 - name: Set kernel and initrd variables (kernel override)
   vars:
-    _kvo: "{{ hostvars['localhost']['kernel_version_override'] }}"
+    _kvo: "{{ kernel_version_override }}"
     _s3_lines: "{{ verify_s3_image.stdout_lines }}"
   ansible.builtin.set_fact:
     kernel: "{{ _s3_lines | select('search', 'vmlinuz') | select('search', _kvo) | list | first }}"
     initrd: "{{ _s3_lines | select('search', 'initramfs') | select('search', _kvo) | list | first }}"
   when:
     - verify_s3_image.stdout_lines | length > 1
-    - hostvars['localhost']['kernel_version_override'] | default('') | length > 0
+    - kernel_version_override | default('') | length > 0
     - _s3_lines | select('search', 'vmlinuz') | select('search', _kvo) | list | length > 0
     - _s3_lines | select('search', 'initramfs') | select('search', _kvo) | list | length > 0
 
@@ -99,18 +106,18 @@
   failed_when: false
   register: verify_s3_image_retry
   when:
-    - hostvars['localhost']['kernel_version_override'] | default('') | length > 0
+    - kernel_version_override | default('') | length > 0
     - kernel | length < 1 or initrd | length < 1
 
 - name: Set kernel and initrd from retry results (kernel override cross-version)
   vars:
-    _kvo: "{{ hostvars['localhost']['kernel_version_override'] }}"
+    _kvo: "{{ kernel_version_override }}"
     _s3_lines: "{{ verify_s3_image_retry.stdout_lines }}"
   ansible.builtin.set_fact:
     kernel: "{{ _s3_lines | select('search', 'vmlinuz') | select('search', _kvo) | list | first }}"
     initrd: "{{ _s3_lines | select('search', 'initramfs') | select('search', _kvo) | list | first }}"
   when:
-    - hostvars['localhost']['kernel_version_override'] | default('') | length > 0
+    - kernel_version_override | default('') | length > 0
     - kernel | length < 1 or initrd | length < 1
     - verify_s3_image_retry.stdout_lines | default([]) | length > 1
     - _s3_lines | select('search', 'vmlinuz') | select('search', _kvo) | list | length > 0
@@ -129,11 +136,11 @@
   ansible.builtin.fail:
     msg: >-
       {{ kernel_override_no_match_msg }}
-      Specified: '{{ hostvars['localhost']['kernel_version_override'] }}'.
+      Specified: '{{ kernel_version_override }}'.
       Pattern: '{{ image_search_pattern }}'.
       Verify the kernel version exists in s3://boot-images.
   when:
-    - hostvars['localhost']['kernel_version_override'] | default('') | length > 0
+    - kernel_version_override | default('') | length > 0
     - kernel | length < 1 or initrd | length < 1
 
 - name: Fail if kernel or initrd length less than 1
