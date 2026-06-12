@@ -68,3 +68,12 @@ kernel_version_override_aarch64: "{{ provision_kernel_version_override_aarch64 }
 # Leave empty ("") to disable additional cloud-init.
 # Default: "" (disabled)
 additional_cloud_init_config_file: ""
+
+#### Optional
+# Path to additional BSS boot parameters configuration file.
+# Allows injecting custom kernel command-line parameters for all nodes (common)
+# or specific functional groups (groups).
+# An example file is provided at omnia/examples/additional_bss_params.yml
+# Leave empty ("") to disable additional BSS params.
+# Default: "" (disabled)
+additional_bss_params_config_file: ""

@@ -251,6 +251,38 @@ ADDITIONAL_CLOUD_INIT_SECTION_NOT_DICT_MSG = (
     "Section must be a mapping/dict."
 )
 
+# additional_bss_params
+ADDITIONAL_BSS_PARAMS_FILE_NOT_FOUND_MSG = (
+    "File not found. Verify additional_bss_params_config_file "
+    "in provision_config.yml points to a valid file."
+)
+ADDITIONAL_BSS_PARAMS_YAML_SYNTAX_MSG = (
+    "YAML syntax error in additional BSS params config file."
+)
+ADDITIONAL_BSS_PARAMS_NOT_DICT_MSG = (
+    "additional BSS params config file must contain a YAML mapping."
+)
+ADDITIONAL_BSS_PARAMS_UNKNOWN_TOP_KEY_MSG = (
+    "Unknown top-level key. Only 'common' and 'groups' are allowed."
+)
+ADDITIONAL_BSS_PARAMS_PROHIBITED_KEY_MSG = (
+    "Prohibited key found. The keys 'kernel', 'initrd', "
+    "and 'macs' are platform-managed and must NOT be overridden."
+)
+ADDITIONAL_BSS_PARAMS_UNKNOWN_KEY_MSG = (
+    "Unknown key found. Only 'params' is allowed."
+)
+ADDITIONAL_BSS_PARAMS_NOT_LIST_MSG = "'params' must be a list."
+ADDITIONAL_BSS_PARAMS_NOT_STRING_MSG = (
+    "params entry is not a string."
+)
+ADDITIONAL_BSS_PARAMS_INVALID_FG_MSG = (
+    "is not a valid functional group name in the 'groups' section."
+)
+ADDITIONAL_BSS_PARAMS_SECTION_NOT_DICT_MSG = (
+    "Section must be a mapping/dict."
+)
+
 # local_repo.yml
 REPO_STORE_PATH_MSG = "Please provide a valid repo_store_path value."
 OMNIA_REPO_URL_MSG = "Repo urls are empty. Please provide a url and corresponding key."

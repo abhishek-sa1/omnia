@@ -38,6 +38,11 @@
       "type": "string",
       "description": "Path to additional cloud-init configuration file for stateless node provisioning. Leave empty to disable.",
       "default": ""
+    },
+    "additional_bss_params_config_file": {
+      "type": "string",
+      "description": "Path to additional BSS boot parameters configuration file. Leave empty to disable.",
+      "default": ""
     }
   },
   "required": [

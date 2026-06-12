@@ -46,6 +46,9 @@
       with_items: "{{ additional_cloud_init_fg_names | default([]) }}"
       when: additional_cloud_init_groups_enabled | default(false) | bool
 
+    - name: Validate additional BSS params configuration
+      ansible.builtin.include_tasks: validate_additional_bss_params.yml
+
     - name: Configure bss and cloud-init
       ansible.builtin.include_tasks: configure_bss_cloud_init.yml
 

@@ -1176,6 +1176,139 @@ def validate_additional_cloud_init_config(config_file_path, pxe_mapping_file_pat
     return errors
 
 
+def _validate_bss_section(section_name, section_data):
+    """Validate a single BSS params section (common or per-FG).
+
+    Returns:
+        list: List of error dicts from create_error_msg.
+    """
+    errors = []
+    key_prefix = f"additional_bss_params.{section_name}"
+
+    if not isinstance(section_data, dict):
+        errors.append(create_error_msg(
+            key_prefix, str(type(section_data).__name__),
+            en_us_validation_msg.ADDITIONAL_BSS_PARAMS_SECTION_NOT_DICT_MSG,
+        ))
+        return errors
+
+    prohibited_keys = ["kernel", "initrd", "macs"]
+    allowed_keys = ["params"]
+
+    for key in section_data:
+        if key in prohibited_keys:
+            errors.append(create_error_msg(
+                f"{key_prefix}.{key}", key,
+                en_us_validation_msg.ADDITIONAL_BSS_PARAMS_PROHIBITED_KEY_MSG,
+            ))
+        elif key not in allowed_keys:
+            errors.append(create_error_msg(
+                f"{key_prefix}.{key}", key,
+                en_us_validation_msg.ADDITIONAL_BSS_PARAMS_UNKNOWN_KEY_MSG,
+            ))
+
+    # params
+    if "params" in section_data:
+        params = section_data["params"]
+        if not isinstance(params, list):
+            errors.append(create_error_msg(
+                f"{key_prefix}.params", str(type(params).__name__),
+                en_us_validation_msg.ADDITIONAL_BSS_PARAMS_NOT_LIST_MSG,
+            ))
+        else:
+            for idx, entry in enumerate(params):
+                if not isinstance(entry, str):
+                    errors.append(create_error_msg(
+                        f"{key_prefix}.params[{idx}]", str(type(entry).__name__),
+                        en_us_validation_msg.ADDITIONAL_BSS_PARAMS_NOT_STRING_MSG,
+                    ))
+
+    return errors
+
+
+def validate_additional_bss_params_config(config_file_path, pxe_mapping_file_path):
+    """Validate the additional BSS boot parameters configuration file.
+
+    Checks:
+      - File exists and is valid YAML
+      - Top-level keys are only 'common' and 'groups'
+      - Per-section: no prohibited keys, only allowed keys, type checks
+      - Group names match functional groups from pxe_mapping_file
+
+    Args:
+        config_file_path (str): Path to additional_bss_params config file.
+        pxe_mapping_file_path (str): Path to PXE mapping CSV for FG name validation.
+
+    Returns:
+        list: List of error dicts (empty if valid).
+    """
+    errors = []
+    if not config_file_path or not config_file_path.strip():
+        return errors
+
+    config_file_path = config_file_path.strip()
+
+    if not os.path.isfile(config_file_path):
+        errors.append(create_error_msg(
+            "additional_bss_params_config_file", config_file_path,
+            en_us_validation_msg.ADDITIONAL_BSS_PARAMS_FILE_NOT_FOUND_MSG,
+        ))
+        return errors
+
+    try:
+        with open(config_file_path, "r", encoding="utf-8") as fh:
+            config_data = yaml.safe_load(fh)
+    except yaml.YAMLError as exc:
+        errors.append(create_error_msg(
+            "additional_bss_params_config_file", config_file_path,
+            f"{en_us_validation_msg.ADDITIONAL_BSS_PARAMS_YAML_SYNTAX_MSG} {exc}",
+        ))
+        return errors
+
+    if config_data is None:
+        return errors
+
+    if not isinstance(config_data, dict):
+        errors.append(create_error_msg(
+            "additional_bss_params_config_file", str(type(config_data).__name__),
+            en_us_validation_msg.ADDITIONAL_BSS_PARAMS_NOT_DICT_MSG,
+        ))
+        return errors
+
+    top_level_keys = ["common", "groups"]
+    for key in config_data:
+        if key not in top_level_keys:
+            errors.append(create_error_msg(
+                f"additional_bss_params.{key}", key,
+                en_us_validation_msg.ADDITIONAL_BSS_PARAMS_UNKNOWN_TOP_KEY_MSG,
+            ))
+
+    common_data = config_data.get("common") or {}
+    groups_data = config_data.get("groups") or {}
+
+    if common_data:
+        errors.extend(_validate_bss_section("common", common_data))
+
+    if groups_data:
+        if not isinstance(groups_data, dict):
+            errors.append(create_error_msg(
+                "additional_bss_params.groups", str(type(groups_data).__name__),
+                en_us_validation_msg.ADDITIONAL_BSS_PARAMS_SECTION_NOT_DICT_MSG,
+            ))
+        else:
+            valid_fg_names = _get_fg_names_from_mapping_file(pxe_mapping_file_path)
+            for fg_name, section_data in groups_data.items():
+                if valid_fg_names and fg_name not in valid_fg_names:
+                    errors.append(create_error_msg(
+                        f"additional_bss_params.groups.{fg_name}", fg_name,
+                        en_us_validation_msg.ADDITIONAL_BSS_PARAMS_INVALID_FG_MSG,
+                    ))
+                if section_data:
+                    errors.extend(_validate_bss_section(fg_name, section_data))
+
+    return errors
+
+
 def validate_provision_config(
     input_file_path, data, logger, module, omnia_base_dir, module_utils_base, project_name
 ):
@@ -1307,6 +1440,12 @@ def validate_provision_config(
     if aci_path:
         aci_errors = validate_additional_cloud_init_config(aci_path, pxe_mapping_file_path)
         errors.extend(aci_errors)
+
+    # Validate additional BSS params config file
+    abss_path = data.get("additional_bss_params_config_file", "")
+    if abss_path:
+        abss_errors = validate_additional_bss_params_config(abss_path, pxe_mapping_file_path)
+        errors.extend(abss_errors)
 
     return errors
 
