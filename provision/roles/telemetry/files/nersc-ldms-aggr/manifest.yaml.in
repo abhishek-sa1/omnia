@@ -12,13 +12,14 @@ spec:
           registry: registry.local
           repository: /nersc/ubuntu-ldms-agg
           tag: 20250804T0856
+        enable_stream: false
+        enable_exporter: false
         net_atat_def: null
-        # DISABLED: Stream configuration
-        # stream:
-        #   resources:
-        #     limits:
-        #       cpu: 1
-        #       memory: 1Gi
+        stream:
+          resources:
+            limits:
+              cpu: 1
+              memory: 1Gi
         agg:
           resources:
             limits:

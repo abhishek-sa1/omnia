@@ -8,6 +8,8 @@ aggs:
   env: /ldms_conf/ldms-env.nersc-ldms-aggr.slurm-cluster-0.sh
   name: slurm-cluster-0
   port: {{ telemetry_config.ldms_configurations.agg_port }}
+enable_stream: {{ telemetry_config.ldms_configurations.enable_stream | default(false) | lower }}
+enable_exporter: {{ telemetry_config.ldms_configurations.enable_exporter | default(false) | lower }}
 authVolMountOption:
 - mountPath: /nersc-munge-key
   name: nersc-munge-key

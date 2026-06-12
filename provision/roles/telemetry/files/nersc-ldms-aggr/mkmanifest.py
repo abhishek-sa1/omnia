@@ -128,7 +128,6 @@ def harvest_replica_info(map_file):
     rep_map = load_json_file(map_file)
     store_stateful_replicas = {}
     aggs = []
-    # DISABLED: Exporter functionality - set to 0
     replicas_exporter = 0
 
     for key, val in rep_map.items():
@@ -137,14 +136,8 @@ def harvest_replica_info(map_file):
         store_stateful_replicas[key] = len(val.get('store', []))
         logging.info(f"Replica key: {key}, count: {store_stateful_replicas[key]}")
 
-    # DISABLED: Exporter replica counting
-    # for ntype, v1 in rep_map.items():
-    #     if ntype == 'stream':
-    #         replicas_exporter += 1
-    #         continue
-    #     for ltype, v2 in v1.items():
-    #         replicas_exporter += len(v2)
-    logging.info(f"Total exporter replicas (DISABLED): {replicas_exporter}")
+    logging.info("Total exporter replicas: %s (computed later based on enable_exporter flag)",
+                 replicas_exporter)
 
     for ntype, val in rep_map.items():
         if ntype == 'stream':
@@ -160,7 +153,7 @@ def harvest_replica_info(map_file):
     return aggs, store_stateful_replicas, replicas_exporter
 
 def harvest_sys_config(sys_conf_path):
-    """Extract namespace, imagePullSecretsOption, port config, and unique ldms auth info."""
+    """Extract namespace, imagePullSecretsOption, port config, feature flags, and unique ldms auth info."""
     sys_conf = load_json_file(sys_conf_path)
     sys_opts = sys_conf.get('sys_opts', {})
     namespace = sys_opts.get('namespace')
@@ -169,6 +162,10 @@ def harvest_sys_config(sys_conf_path):
     # Extract LDMS port configuration directly from sys_opts
     agg_port = sys_opts.get('agg_port', 6001)
     store_port = sys_opts.get('store_port', 6001)
+
+    # Feature flags
+    enable_stream = sys_opts.get('enable_stream', False)
+    enable_exporter = sys_opts.get('enable_exporter', False)
     
     mounts = {}
 
@@ -186,23 +183,23 @@ def harvest_sys_config(sys_conf_path):
             if entry not in mounts[auth_type]:
                 mounts[auth_type].append(entry)
 
-    # DISABLED: Stream authentication mounting
-    # conf = sys_conf.get('stream', None)
-    # if conf:
-    #     auth_type = conf.get('auth_type')
-    #     if auth_type:
-    #         entry = {
-    #             "auth_secret": conf.get("auth_secret"),
-    #             "auth_secret_file": conf.get("auth_secret_file")
-    #         }
-    #         if auth_type not in mounts:
-    #             mounts[auth_type] = []
-    #         if entry not in mounts[auth_type]:
-    #             mounts[auth_type].append(entry)
+    if enable_stream:
+        conf = sys_conf.get('stream', None)
+        if conf:
+            auth_type = conf.get('auth_type')
+            if auth_type:
+                entry = {
+                    "auth_secret": conf.get("auth_secret"),
+                    "auth_secret_file": conf.get("auth_secret_file")
+                }
+                if auth_type not in mounts:
+                    mounts[auth_type] = []
+                if entry not in mounts[auth_type]:
+                    mounts[auth_type].append(entry)
 
-    return namespace, img_pull_sec_opt, agg_port, store_port, mounts
+    return namespace, img_pull_sec_opt, agg_port, store_port, enable_stream, enable_exporter, mounts
 
-def update_manifest(manifest, aggs, store_stateful_replicas, replicas_exporter, net_vars, namespace, img_pull_opts, agg_port, store_port, all_mounts):
+def update_manifest(manifest, aggs, store_stateful_replicas, replicas_exporter, net_vars, namespace, img_pull_opts, agg_port, store_port, enable_stream, enable_exporter, all_mounts):
     
     charts = safe_get(manifest, ['spec', 'charts'], [])
     for x in charts:
@@ -293,8 +290,14 @@ def update_manifest(manifest, aggs, store_stateful_replicas, replicas_exporter, 
                                 }
                             )
                             
-            # DISABLED: Exporter functionality
-            # x['values']['statefulSet']['exporter'] = {'replicas': replicas_exporter}
+            # Feature flags
+            x['values']['enable_stream'] = enable_stream
+            x['values']['enable_exporter'] = enable_exporter
+
+            if enable_exporter:
+                x['values']['statefulSet']['exporter'] = {'replicas': replicas_exporter}
+            else:
+                x['values']['statefulSet']['exporter'] = {'replicas': 0}
             x['values']['statefulSet']['store'] = [{'name': k, 'replicas': v} for k, v in store_stateful_replicas.items()]
             x['values']['aggs'] = aggs
             logging.info("Manifest updated for nersc-ldms-aggr chart.")
@@ -350,7 +353,7 @@ def main():  # pylint: disable=too-many-locals
     aggs, store_stateful_replicas, replicas_exporter = harvest_replica_info(replica_map_file)
 
     # Step 3: System config
-    namespace, img_pull_sec_opt, agg_port, store_port, all_mounts = harvest_sys_config(sys_conf)
+    namespace, img_pull_sec_opt, agg_port, store_port, enable_stream, enable_exporter, all_mounts = harvest_sys_config(sys_conf)
 
     # Step 4: Load manifest template
     manifest = load_yaml_file(manifest_template_file)
@@ -359,7 +362,7 @@ def main():  # pylint: disable=too-many-locals
         raise NoManifestTemplateException()
 
     # Step 5: Update manifest
-    manifest = update_manifest(manifest, aggs, store_stateful_replicas, replicas_exporter, net_vars, namespace, img_pull_sec_opt, agg_port, store_port, all_mounts)
+    manifest = update_manifest(manifest, aggs, store_stateful_replicas, replicas_exporter, net_vars, namespace, img_pull_sec_opt, agg_port, store_port, enable_stream, enable_exporter, all_mounts)
 
     # Step 6: Write manifest.yaml
     write_yaml_file(manifest_output_file, manifest, description="manifest")

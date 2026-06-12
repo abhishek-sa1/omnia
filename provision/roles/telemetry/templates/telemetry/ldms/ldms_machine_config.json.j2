@@ -4,6 +4,9 @@
     "namespace": "telemetry",
     "agg_port": {{ telemetry_config.ldms_configurations.agg_port }},
     "store_port": {{ telemetry_config.ldms_configurations.store_port }},
+    "host_map_provider": "{{ telemetry_config.ldms_configurations.host_map_provider | default('dell') }}",
+    "enable_stream": {{ telemetry_config.ldms_configurations.enable_stream | default(false) | lower }},
+    "enable_exporter": {{ telemetry_config.ldms_configurations.enable_exporter | default(false) | lower }},
     "imagePullSecretsOption": {
       "imagePullSecrets": [
       ]
