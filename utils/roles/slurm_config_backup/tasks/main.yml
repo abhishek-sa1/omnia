@@ -12,6 +12,7 @@
   ansible.builtin.pause:
     prompt: "Enter backup base name (leave empty for timestamp-only)"
   register: backup_base_name_input
+  when: not (skip_approval | default(false) | bool)
 
 - name: Set backup id
   ansible.builtin.set_fact:

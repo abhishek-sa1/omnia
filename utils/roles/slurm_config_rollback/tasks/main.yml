@@ -62,17 +62,20 @@
   ansible.builtin.pause:
     prompt: "Enter the backup number to rollback to"
   register: backup_choice_input
+  when: not (skip_approval | default(false) | bool)
   tags: config_rollback
 
 - name: Set backup choice index
   ansible.builtin.set_fact:
-    backup_choice_index: "{{ backup_choice_input.user_input | default('') | trim }}"
+    backup_choice_index: "{{ rollback_backup_number | default('1') if (skip_approval | default(false) | bool) else (backup_choice_input.user_input | default('') | trim) }}"
   tags: config_rollback
 
 - name: Fail if backup selection is empty
   ansible.builtin.fail:
     msg: "No backup number selected. Rollback aborted."
-  when: backup_choice_index | length == 0
+  when:
+    - not (skip_approval | default(false) | bool)
+    - backup_choice_index | length == 0
   tags: config_rollback
 
 - name: Validate backup choice input is within range
@@ -129,13 +132,16 @@
   ansible.builtin.pause:
     prompt: "Some slurm config files are missing in the selected backup. Continue anyway? (y/N)"
   register: continue_missing_confs
-  when: missing_slurm_conf_files | length > 0
+  when:
+    - not (skip_approval | default(false) | bool)
+    - missing_slurm_conf_files | length > 0
   tags: config_rollback
 
 - name: Fail if user does not want to continue with missing slurm conf files
   ansible.builtin.fail:
     msg: "Rollback aborted"
   when:
+    - not (skip_approval | default(false) | bool)
     - missing_slurm_conf_files | length > 0
     - continue_missing_confs.user_input | default('N') | lower != 'y'
   tags: config_rollback
@@ -156,13 +162,16 @@
   ansible.builtin.pause:
     prompt: "munge.key is missing in the selected backup. Continue anyway? (y/N)"
   register: continue_missing_munge_key
-  when: not munge_key_stat.stat.exists
+  when:
+    - not (skip_approval | default(false) | bool)
+    - not munge_key_stat.stat.exists
   tags: config_rollback
 
 - name: Fail if user does not want to continue without munge.key
   ansible.builtin.fail:
     msg: "Rollback aborted"
   when:
+    - not (skip_approval | default(false) | bool)
     - not munge_key_stat.stat.exists
     - continue_missing_munge_key.user_input | default('N') | lower != 'y'
   tags: config_rollback
@@ -192,13 +201,16 @@
   ansible.builtin.pause:
     prompt: "Some directories are missing in the backup. Continue anyway? (y/N)"
   register: continue_missing
-  when: missing_backup_dirs | length > 0
+  when:
+    - not (skip_approval | default(false) | bool)
+    - missing_backup_dirs | length > 0
   tags: config_rollback
 
 - name: Fail if user does not want to continue
   ansible.builtin.fail:
     msg: "Rollback aborted"
   when:
+    - not (skip_approval | default(false) | bool)
     - missing_backup_dirs | length > 0
     - continue_missing.user_input | default('N') | lower != 'y'
   tags: config_rollback
@@ -207,23 +219,28 @@
   ansible.builtin.pause:
     prompt: "Create a safety backup of current state before rollback? (y/n)"
   register: pre_rollback_backup
+  when: not (skip_approval | default(false) | bool)
   tags: config_rollback
 
 - name: Set pre-rollback backup choice
   ansible.builtin.set_fact:
-    pre_rollback_backup_choice: "{{ pre_rollback_backup.user_input | default('') | trim | lower }}"
+    pre_rollback_backup_choice: "{{ 'n' if (skip_approval | default(false) | bool) else (pre_rollback_backup.user_input | default('') | trim | lower) }}"
   tags: config_rollback
 
 - name: Fail if pre-rollback backup choice is empty
   ansible.builtin.fail:
     msg: "No input provided for safety backup prompt. Rollback aborted."
-  when: pre_rollback_backup_choice | length == 0
+  when:
+    - not (skip_approval | default(false) | bool)
+    - pre_rollback_backup_choice | length == 0
   tags: config_rollback
 
 - name: Validate pre-rollback backup choice
   ansible.builtin.fail:
     msg: "Invalid input '{{ pre_rollback_backup.user_input | default('') }}'. Enter 'y' or 'n'."
-  when: pre_rollback_backup_choice not in ['y', 'yes', 'n', 'no']
+  when:
+    - not (skip_approval | default(false) | bool)
+    - pre_rollback_backup_choice not in ['y', 'yes', 'n', 'no']
   tags: config_rollback
 
 - name: Run safety backup before rollback
