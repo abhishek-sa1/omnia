@@ -121,7 +121,7 @@
   connection: ssh
   tasks:
     - name: OpenCHAMI cluster authentication
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../common/tasks/common/openchami_auth.yml"
+      ansible.builtin.include_tasks: "{{ playbook_dir ../../../common/tasks/common/openchami_auth.yml"
       vars:
         oim_node_name: "{{ hostvars['localhost']['oim_node_name'] }}"
 

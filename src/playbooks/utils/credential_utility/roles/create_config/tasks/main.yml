@@ -14,7 +14,7 @@
 ---
 
 - name: Include vars for encrypted credentials
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../../../../common/tasks/common/decrypt_include_encrypt.yml"
+  ansible.builtin.include_tasks: "{{ role_path }}/../../../../../common/tasks/common/decrypt_include_encrypt.yml"
   loop: "{{ credential_files }}"
   loop_control:
     loop_var: cred_config

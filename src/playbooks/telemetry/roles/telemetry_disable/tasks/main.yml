@@ -26,7 +26,7 @@
         file: "{{ telemetry_config_file }}"
 
     - name: Load HA configuration
-      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../../common/tasks/common/load_ha_config.yml"
+      ansible.builtin.include_tasks: "{{ playbook_dir ../../../common/tasks/common/load_ha_config.yml"
 
 - name: Disable PowerScale metrics
   tags:
