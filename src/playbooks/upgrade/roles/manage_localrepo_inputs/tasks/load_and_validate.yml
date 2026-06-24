@@ -45,17 +45,17 @@
 
 - name: "Load — Check upgrade_vars.yml exists"
   ansible.builtin.stat:
-    path: "{{ role_path }}/../../../../../common/vars/upgrade_vars.yml"
+    path: "{{ role_path ../../../../common/vars/upgrade_vars.yml"
   register: _upgrade_config_stat
 
 - name: "Load — Fail if upgrade_vars.yml not found"
   ansible.builtin.fail:
-    msg: "upgrade_vars.yml not found at {{ role_path }}/../../../../../common/vars/upgrade_vars.yml"
+    msg: "upgrade_vars.yml not found at {{ role_path ../../../../common/vars/upgrade_vars.yml"
   when: not _upgrade_config_stat.stat.exists
 
 - name: "Load — Load upgrade_vars.yml"
   ansible.builtin.include_vars:
-    file: "{{ role_path }}/../../../../../common/vars/upgrade_vars.yml"
+    file: "{{ role_path ../../../../common/vars/upgrade_vars.yml"
     name: upgrade_config
 
 # --- Extract metadata ---

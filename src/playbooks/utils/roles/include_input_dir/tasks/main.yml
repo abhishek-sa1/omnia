@@ -43,11 +43,11 @@
   tags: always
 
 - name: Include common vars
-  ansible.builtin.include_vars: "{{ role_path }}/../../../../../common/vars/common_vars.yml"
+  ansible.builtin.include_vars: "{{ role_path ../../../../common/vars/common_vars.yml"
   tags: always
 
 - name: Include openchami vars
-  ansible.builtin.include_vars: "{{ role_path }}/../../../../../common/vars/openchami_vars.yml"
+  ansible.builtin.include_vars: "{{ role_path ../../../../common/vars/openchami_vars.yml"
   when: openchami_vars_suppport | default(false)
   tags: always
 

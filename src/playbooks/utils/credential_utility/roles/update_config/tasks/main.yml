@@ -15,7 +15,7 @@
 
 - name: Set common library path
   ansible.builtin.set_fact:
-    module_utils_path: "{{ role_path }}/../../../../common/library/module_utils/"
+    module_utils_path: "{{ role_path }}/../../../../../common/library/module_utils/"
 
 - name: Pre-load build stream credentials if they exist
   when:
@@ -28,7 +28,7 @@
         cred_vault_path: "{{ credential_files[1].vault_path }}"
 
     - name: Include build stream credentials using common task
-      ansible.builtin.include_tasks: "{{ role_path }}/../../../../../../common/tasks/common/decrypt_include_encrypt.yml"
+      ansible.builtin.include_tasks: "{{ role_path }}/../../../../../common/tasks/common/decrypt_include_encrypt.yml"
       vars:
         credential_file_path: "{{ cred_file_path }}"
         vault_password_file: "{{ cred_vault_path }}"
@@ -47,7 +47,7 @@
     loop_var: service
 
 - name: Include updated credentials
-  ansible.builtin.include_tasks: "{{ role_path }}/../../../../../../common/tasks/common/decrypt_include_encrypt.yml"
+  ansible.builtin.include_tasks: "{{ role_path }}/../../../../../common/tasks/common/decrypt_include_encrypt.yml"
   loop: "{{ credential_files }}"
   loop_control:
     loop_var: cred_config
