@@ -87,7 +87,10 @@ links under runtime directories still block.
 
 1. **Selects the environment config** — installs repository `omnia.env` on the first run; otherwise preserves and uses `/etc/omnia/omnia.env`
 2. **Validates the active env file** — checks `SYSTEM_ADMIN_NIC_IPV4` is set and valid before loading it; `--force-env` explicitly replaces the installed file from the repository
-3. Validates full environment (hostname, domain, admin NIC match)
+3. Validates full environment (hostname, domain, admin NIC match):
+   - `SYSTEM_HOSTNAME` must match `hostname -s` (setup fails if mismatch)
+   - `SYSTEM_DOMAIN_NAME` is compared to `hostname -d` (warning only, does not block)
+   - `SYSTEM_ADMIN_NIC_IPV4` must be assigned to a local network interface (setup fails if not found)
 4. Creates `$OMNIA_DATA_PATH` and its `.data` directory
 5. Finds Python 3.11+, creates/updates venv at `$OMNIA_VENV_PATH`
 6. Runs each domain's `domain-init.sh` which:
@@ -201,10 +204,15 @@ DRY RUN — would initialize these domains:
 Prepares the three base infrastructure domains in dependency order:
 **repo_manager** → **image_build_manager** → **orchestrator**
 
-For each domain, runs lifecycle phases: validation → `credentials` → `prepare`.
-The validation phase uses `precheck` for Repo Manager and `validate` for Image
-Build Manager and Orchestrator.
-If any domain fails, execution stops immediately.
+Execution is phase-by-phase across all domains (not domain-by-domain). For each
+lifecycle phase (validation → `credentials` → `prepare`), the command runs that
+phase on all three domains before moving to the next phase. The validation phase
+uses `precheck` for Repo Manager and `validate` for Image Build Manager and
+Orchestrator.
+
+If any domain fails in any phase, execution stops immediately (fail-fast
+behavior). You must fix the issue and rerun the entire `--prepare-base` command;
+it safely rechecks already prepared services.
 
 ```bash
 ./omnia.sh --prepare-base                     # Prepare all three base domains
