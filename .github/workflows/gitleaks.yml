@@ -9,6 +9,7 @@ name: Secret Leak Scan
       - 'release_*'
       - 'issue-*'
       - 'pub/**'
+      - 'feature/**'
 
 jobs:
   gitleaks:

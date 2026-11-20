@@ -9,6 +9,7 @@ name: PR Issue and Network Policy
       - 'release_*'
       - 'issue-*'
       - 'pub/**'
+      - 'feature/**'
     types: [opened, synchronize, reopened, edited, ready_for_review]
 
 permissions:

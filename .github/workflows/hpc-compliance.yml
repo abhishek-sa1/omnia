@@ -25,6 +25,7 @@ name: HPC Compliance Scanner
       - 'release_*'
       - 'issue-*'
       - 'pub/**'
+      - 'feature/**'
 
 permissions:
   contents: read

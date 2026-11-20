@@ -9,6 +9,7 @@ name: Bandit Security Scan
       - 'release_*'
       - 'issue-*'
       - 'pub/**'
+      - 'feature/**'
 
 jobs:
   bandit:

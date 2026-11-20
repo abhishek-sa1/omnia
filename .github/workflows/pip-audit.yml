@@ -9,6 +9,7 @@ name: Dependency Vulnerability Scan
       - 'release_*'
       - 'issue-*'
       - 'pub/**'
+      - 'feature/**'
 
 jobs:
   pip-audit:

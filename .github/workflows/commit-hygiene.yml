@@ -34,6 +34,7 @@ name: Commit Hygiene
       - 'release_*'
       - 'issue-*'
       - 'pub/**'
+      - 'feature/**'
     types: [opened, synchronize, reopened]
 
 permissions:

@@ -15,6 +15,7 @@ name: Secure Code Review
       - 'release_*'
       - 'issue-*'
       - 'pub/**'
+      - 'feature/**'
 
 permissions:
   contents: read

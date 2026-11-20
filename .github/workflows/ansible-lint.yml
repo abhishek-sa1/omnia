@@ -8,6 +8,7 @@ on:
       - 'release_*'
       - 'issue-*'
       - 'pub/**'
+      - 'feature/**'
   workflow_dispatch:
 jobs:
   build:

@@ -9,6 +9,7 @@ name: Unit Tests & Coverage
       - 'release_*'
       - 'issue-*'
       - 'pub/**'
+      - 'feature/**'
 jobs:
   test:
     name: Unit Tests & Coverage
